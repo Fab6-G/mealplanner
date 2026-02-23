@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥗 Couples Meal Planner</h1>
+            <p class="subtitle">Personalized nutrition for fitness goals • Tesco ready • Inventory tracking</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="meals">Meal Plans</button>
+            <button class="tab-btn" data-tab="staples">🧺 Weekly Staples</button>
+            <button class="tab-btn" data-tab="shopping">Shopping List</button>
+            <button class="tab-btn" data-tab="inventory">Food Inventory</button>
+            <button class="tab-btn" data-tab="recipes">Recipe Ideas</button>
+        </div>
+
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid grid-2">
+                <!-- Fabian Profile -->
+                <div class="card" id="profile-fabian">
+                    <div class="profile-header">
+                        <div class="profile-avatar">💪</div>
+                        <div class="profile-info">
+                            <h4 id="fabian-name">You (Muscle Gain)</h4>
+                            <p id="fabian-meta">29M • 182cm • 82kg • Very Active</p>
+                            <p id="fabian-goal" style="color: var(--color-success); font-weight: 600;">↗ 500 cal surplus</p>
+                        </div>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value" id="fabian-calories">3,500</div>
+                            <div class="stat-label">Calories</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="fabian-protein">170g</div>
+                            <div class="stat-label">Protein</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="fabian-carbs">450g</div>
+                            <div class="stat-label">Carbs</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="fabian-fats">120g</div>
+                            <div class="stat-label">Fats</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Daily Macro Target</h3>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="fabian-protein-label">Protein: 170g (49%)</span>
+                            <span>Protein</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill protein-fill" id="fabian-protein-bar" style="width: 49%;">49%</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="fabian-carbs-label">Carbs: 450g (39%)</span>
+                            <span>Carbs</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill carb-fill" id="fabian-carbs-bar" style="width: 39%;">39%</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="fabian-fats-label">Fats: 120g (31%)</span>
+                            <span>Fats</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill fat-fill" id="fabian-fats-bar" style="width: 31%;">31%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stefanie Profile -->
+                <div class="card" id="profile-stefanie">
+                    <div class="profile-header">
+                        <div class="profile-avatar" style="background: #FFE8E8; color: #E74C3C;">🏃‍♀️</div>
+                        <div class="profile-info">
+                            <h4 id="stef-name">Your Wife (Toning)</h4>
+                            <p id="stef-meta">26F • Weight Loss & Tone</p>
+                            <p id="stef-goal" style="color: var(--color-danger); font-weight: 600;">↘ 500 cal deficit</p>
+                        </div>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value" id="stef-calories">1,900</div>
+                            <div class="stat-label">Calories</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="stef-protein">130g</div>
+                            <div class="stat-label">Protein</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="stef-carbs">220g</div>
+                            <div class="stat-label">Carbs</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="stef-fats">65g</div>
+                            <div class="stat-label">Fats</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Daily Macro Target</h3>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="stef-protein-label">Protein: 130g (27%)</span>
+                            <span>Protein</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill protein-fill" id="stef-protein-bar" style="width: 27%;">27%</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="stef-carbs-label">Carbs: 220g (46%)</span>
+                            <span>Carbs</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill carb-fill" id="stef-carbs-bar" style="width: 46%;">46%</div>
+                        </div>
+                    </div>
+
+                    <div class="macro-bar">
+                        <div class="macro-label">
+                            <span id="stef-fats-label">Fats: 65g (31%)</span>
+                            <span>Fats</span>
+                        </div>
+                        <div class="macro-progress">
+                            <div class="macro-fill fat-fill" id="stef-fats-bar" style="width: 31%;">31%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>📋 Weekly Overview</h3>
+                <div class="stats" style="margin-top: 15px;">
+                    <div class="stat">
+                        <div class="stat-value">35</div>
+                        <div class="stat-label">Total Meals Planned</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">28</div>
+                        <div class="stat-label">Unique Ingredients</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">~£95</div>
+                        <div class="stat-label">Est. Tesco Cost</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Prep Days</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEALS TAB -->
+        <div id="meals" class="tab-content">
+            <div class="card">
+                <h2>Weekly Meal Plans</h2>
+                <p style="color: var(--color-text-light); margin-bottom: 20px;">Week of Feb 3–9, 2026 • Customized for both fitness goals • Full 7-day plan</p>
+
+                <div class="grid">
+                    <template id="day-template">
+                        <div>
+                            <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;"></h3>
+
+                            <div class="meal-item shared-dinner">
+                                <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                                <div class="meal-time">Dinner</div>
+                                <div class="meal-name"></div>
+
+                                <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
+                                    <div class="fabian-portion"></div>
+                                    <div class="stef-portion"></div>
+                                </div>
+
+                                <div class="meal-macros" style="margin-top: 8px;">
+                                    <div style="font-size: 11px; color: var(--color-text-light);">
+                                        <strong>Cooking time:</strong>
+                                        <span class="recipe-time"></span>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                    📖 View Full Recipe & Instructions
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="buttons" style="margin-top: 20px;">
+                    <button class="btn-primary" onclick="regenerateWeek()">Generate New Week</button>
+                    <button class="btn-secondary">Export PDF</button>
+                    <button class="btn-secondary">Share</button>
+                    <button class="btn-secondary" onclick="clearWeeklyPlan()">🗑 Clear Week</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAPLES TAB -->
+        <div id="staples" class="tab-content">
+            <h2>Weekly Staples</h2>
+            <p style="margin-bottom: 12px; font-size: 13px;">
+                These items are added to your shopping list every week, on top of recipe ingredients.
+            </p>
+
+            <div class="card" style="margin-bottom: 16px;">
+                <h3 style="margin-bottom: 8px;">Add Staple</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <input id="stapleNameInput" type="text" placeholder="Item name" style="flex: 2; min-width: 120px;">
+                    <input id="stapleQuantityInput" type="number" min="0.1" step="0.1" value="1" style="width: 80px;">
+                    <select id="stapleUnitSelect" style="min-width: 80px;">
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                        <option value="l">l</option>
+                        <option value="pcs">pcs</option>
+                        <option value="pack">pack</option>
+                    </select>
+                    <select id="stapleCategorySelect" style="min-width: 120px;">
+                        <option value="pantry">Pantry</option>
+                        <option value="produce">Produce</option>
+                        <option value="protein">Protein</option>
+                        <option value="dairy">Dairy</option>
+                        <option value="carbs">Carbs</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button class="btn-secondary" onclick="addStapleItem()" style="white-space: nowrap;">
+                        ➕ Add staple
+                    </button>
+                </div>
+                <div class="buttons" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button class="btn-secondary" onclick="exportWeeklyStaples()">⬇ Export Staples</button>
+                    <button class="btn-secondary" onclick="importWeeklyStaples()">⬆ Import Staples</button>
+                    <button class="btn-secondary" onclick="clearWeeklyStaples()">🗑 Delete All Staples</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 8px;">Your Weekly Staples</h3>
+                <div id="staplesGrid"></div>
+            </div>
+        </div>
+
+        <!-- SHOPPING LIST TAB -->
+        <div id="shopping" class="tab-content">
+            <div class="card">
+                <h2>Tesco Shopping List</h2>
+                <p style="color: var(--color-text-light); margin-bottom: 20px;">
+                    Ready to order online • Prices estimated • Week of Feb 3–9, 2026
+                </p>
+
+                <div class="buttons" style="margin-bottom: 20px;">
+                    <button class="btn-primary" onclick="copyToClipboard()">📋 Copy All Items</button>
+                    <button class="btn-secondary" onclick="printList()">🖨️ Print List</button>
+                    <button class="btn-secondary" onclick="resetCheckboxes()">↺ Reset Checkboxes</button>
+                    <button class="btn-secondary" onclick="addShoppingListToInventory()">➕ Add remaining to inventory</button>
+                    <button class="btn-secondary" onclick="autoMatchInventory()">✅ Match Inventory</button>
+                </div>
+
+                <div class="shopping-list" id="shoppingList">
+                    <!-- Filled dynamically from recipes and plan -->
+                </div>
+
+                <div class="card" style="background: var(--color-primary-light); margin-top: 20px; border: 2px solid var(--color-primary);">
+                    <h3 style="color: var(--color-primary); margin-bottom: 10px;">💰 Cost Summary</h3>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--color-primary);">£125.90</div>
+                            <div class="stat-label">Estimated Total</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--color-success);">~£18/day</div>
+                            <div class="stat-label">Per Day Cost</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--color-info);">28</div>
+                            <div class="stat-label">Unique Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--color-warning);">🔗</div>
+                            <div class="stat-label">Ready for Tesco</div>
+                        </div>
+                    </div>
+                    <div class="buttons" style="margin-top: 15px;">
+                        <button class="btn-success">🛒 Add to Tesco Cart</button>
+                        <button class="btn-secondary">📧 Email List</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVENTORY TAB -->
+        <div id="inventory" class="tab-content">
+            <div class="card">
+                <h2>Food Inventory Tracker</h2>
+                <p style="color: var(--color-text-light); margin-bottom: 20px;">
+                    Track what you have at home • Auto-updates shopping suggestions
+                </p>
+
+                <div class="input-group inventory-input-group" style="margin-bottom: 20px;">
+                    <label for="itemInput" class="visually-hidden">Item</label>
+                    <input
+                            type="text"
+                            id="itemInput"
+                            placeholder="Enter food item (e.g., Chicken Breast)...">
+
+                    <label for="quantityInput" class="visually-hidden">Quantity</label>
+                    <input
+                            type="number"
+                            id="quantityInput"
+                            placeholder="Quantity"
+                            min="1"
+                            value="1">
+
+                    <label for="unitSelect" class="visually-hidden">Unit</label>
+                    <select id="unitSelect">
+                        <option value="g">g</option>
+                        <option value="kg" selected>kg</option>
+                        <option value="ml">ml</option>
+                        <option value="l">l</option>
+                        <option value="piece">piece</option>
+                        <option value="pack">pack</option>
+                        <option value="tin">tin</option>
+                        <option value="jar">jar</option>
+                        <option value="loaf">loaf</option>
+                        <option value="box">box</option>
+                    </select>
+
+                    <label for="categorySelect" class="visually-hidden">Category</label>
+                    <select id="categorySelect">
+                        <option value="produce">Produce</option>
+                        <option value="protein">Protein</option>
+                        <option value="dairy">Dairy</option>
+                        <option value="carbs">Carbs</option>
+                        <option value="pantry" selected>Pantry</option>
+                        <option value="other">Other</option>
+                    </select>
+
+                    <button class="btn-primary" onclick="addInventoryItem()">+ Add Item</button>
+
+                    <div class="buttons" style="margin-bottom: 20px;">
+                        <button class="btn-secondary" onclick="exportInventory()">⬇ Export Inventory</button>
+                        <button class="btn-secondary" onclick="importInventory()">⬆ Import Inventory</button>
+                        <button class="btn-secondary" onclick="clearInventory()">🗑 Delete All</button>
+                    </div>
+
+                </div>
+
+                <div class="inventory-grid" id="inventoryGrid"></div>
+
+                <div class="card" style="background: var(--color-bg); margin-top: 20px;">
+                    <h3>💡 Inventory Tips</h3>
+                    <ul style="padding-left: 20px; line-height: 1.8; color: var(--color-text-light);">
+                        <li><strong>Update Weekly:</strong> Check on Sundays to plan next week's shopping</li>
+                        <li><strong>FIFO Method:</strong> Use older items first (First In, First Out)</li>
+                        <li><strong>Smart Storage:</strong> Keep proteins frozen, vegetables in crisper</li>
+                        <li><strong>Prep Ahead:</strong> Batch cook on Sundays using your inventory</li>
+                        <li><strong>Waste Prevention:</strong> Dashboard will suggest recipes based on expiring items</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECIPES TAB -->
+        <div id="recipes" class="tab-content">
+            <div class="card">
+                <h2>Recipe Ideas</h2>
+                <p style="color: var(--color-text-light); margin-bottom: 20px;">
+                    Auto-generated recipes matching your macros • Ingredients available at Tesco • Rotated weekly
+                </p>
+
+                <div class="buttons" style="margin-bottom: 20px;">
+                    <button class="btn-primary" onclick="alert('Generating new recipes using your macros...')">🔄 Generate New Recipes</button>
+                    <button class="btn-secondary">⭐ View Favorites</button>
+                    <button class="btn-secondary">🔗 Share Recipe</button>
+                </div>
+
+                <h3 style="margin-top: 20px; margin-bottom: 15px;">Your Recipes</h3>
+
+                <div class="grid">
+                    <template id="recipe-template">
+                        <div>
+                            <div class="meal-item shared-dinner">
+                                <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                                <div class="meal-time">Dinner</div>
+                                <div class="meal-name"></div>
+
+                                <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
+                                    <div class="fabian-portion"></div>
+                                    <div class="stef-portion"></div>
+                                </div>
+
+                                <div class="meal-macros" style="margin-top: 8px;">
+                                    <div style="font-size: 11px; color: var(--color-text-light);">
+                                        <strong>Cooking time:</strong>
+                                        <span class="recipe-time"></span>
+                                    </div>
+                                </div>
+                                <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                    📖 View Full Recipe & Instructions
+                                </button>
+                                <button
+                                        class="btn-secondary add-to-plan"
+                                        onclick="addRecipeToPlanFromButton(this)"
+                                        style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                    ➕ Add to Meal Plan
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+        </div>
+    </div>
+    </div>
+    <!-- Recipe Modal -->
+    <div class="modal" id="recipeModal">
+        <div class="modal-content recipe-modal">
+            <!-- JavaScript will populate content -->
+        </div>
+    </div>
+</body>
+</html>
