@@ -1,0 +1,12 @@
+# wrangler.toml
+name = "mealplanner-api"
+main = "src/index.js"
+compatibility_date = "2026-05-26"
+
+# Route API endpoints (locally it runs on localhost:8787, in production it can route /api/*)
+# Binding for D1 database
+[[d1_databases]]
+binding = "DB"
+database_name = "mealplanner-db"
+database_id = "local-dev-id" # Will be replaced by production database ID on wrangler deploy
+migrations_dir = "migrations"

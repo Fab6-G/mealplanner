@@ -1,4 +1,4 @@
-﻿// =========================
+// =========================
 // 0. DEBUG OVERLAY + TABS
 // =========================
 
@@ -52,20 +52,19 @@ document.addEventListener("DOMContentLoaded", function () {
 // 1. WEEKLY PLAN (LOCAL STORAGE)
 // =========================
 
-const WEEKLY_PLAN_STORAGE_KEY = "mealPlanner.weeklyPlan";
+// =========================
+// 1. WEEKLY PLAN (API PERSISTENCE)
+// =========================
+
+let cachedWeeklyPlan = null;
 
 function loadWeeklyPlan() {
-    try {
-        const raw = localStorage.getItem(WEEKLY_PLAN_STORAGE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-    } catch {
-        return null;
-    }
+    return cachedWeeklyPlan || defaultWeeklyPlan;
 }
 
 function saveWeeklyPlan(plan) {
-    localStorage.setItem(WEEKLY_PLAN_STORAGE_KEY, JSON.stringify(plan));
+    cachedWeeklyPlan = plan;
+    API.saveWeeklyPlan(plan.weekLabel, plan.days).catch(console.error);
 }
 
 const defaultWeeklyPlan = {
@@ -81,8 +80,8 @@ const defaultWeeklyPlan = {
     ]
 };
 
-// NOTE: recipeBank and PROFILES come from data.js (loaded before app.js)
-let weeklyPlan = loadWeeklyPlan() || structuredClone(defaultWeeklyPlan);
+// Initial local plan copy
+let weeklyPlan = structuredClone(defaultWeeklyPlan);
 
 // =========================
 // 2. PROFILE RENDERING
@@ -210,20 +209,26 @@ function recomputeShoppingData() {
 // 4. INVENTORY (LOCAL STORAGE + UI)
 // =========================
 
-const INVENTORY_STORAGE_KEY = "mealPlanner.inventory";
+// =========================
+// 4. INVENTORY (API PERSISTENCE)
+// =========================
+
+let cachedInventory = [];
 
 function loadInventory() {
-    try {
-        const raw = localStorage.getItem(INVENTORY_STORAGE_KEY);
-        if (!raw) return [];
-        return JSON.parse(raw);
-    } catch {
-        return [];
-    }
+    return cachedInventory;
 }
 
 function saveInventory(items) {
-    localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(items));
+    cachedInventory = items;
+}
+
+async function syncInventory() {
+    try {
+        cachedInventory = await API.getInventory();
+    } catch (err) {
+        console.error("Failed to sync inventory:", err);
+    }
 }
 
 function getStatusFromAge(daysAgo) {
@@ -304,15 +309,15 @@ function renderInventory() {
             label.appendChild(qtySpan);
             label.appendChild(metaSpan);
 
-            checkbox.addEventListener("change", () => {
+            checkbox.addEventListener("change", async () => {
                 if (!checkbox.checked) return;
                 const ok = confirm(`Remove "${item.name}" from inventory?`);
                 if (!ok) {
                     checkbox.checked = false;
                     return;
                 }
-                const current = loadInventory().filter(x => x.id !== item.id);
-                saveInventory(current);
+                await API.deleteInventoryItem(item.id);
+                await syncInventory();
                 renderInventory();
             });
 
@@ -331,7 +336,7 @@ function renderInventory() {
     renderInventoryCategory("📦", "Other Items", categories.other);
 }
 
-function addInventoryItem() {
+async function addInventoryItem() {
     const name = document.getElementById("itemInput").value.trim();
     const quantity = parseFloat(document.getElementById("quantityInput").value) || 1;
     const rawUnit = document.getElementById("unitSelect").value;
@@ -343,6 +348,7 @@ function addInventoryItem() {
         return;
     }
 
+    await syncInventory();
     const items = loadInventory();
     const existing = items.find(
         i =>
@@ -351,20 +357,23 @@ function addInventoryItem() {
             i.category === category
     );
 
+    let itemToSave;
     if (existing) {
         existing.quantity += quantity;
+        itemToSave = existing;
     } else {
-        items.push({
+        itemToSave = {
             id: `inv-${Date.now()}-${Math.random().toString(16).slice(2)}`,
             name,
             quantity,
             unit,
             category,
             dateAdded: new Date().toISOString()
-        });
+        };
     }
 
-    saveInventory(items);
+    await API.saveInventoryItem(itemToSave);
+    await syncInventory();
     renderInventory();
 
     document.getElementById("itemInput").value = "";
@@ -431,10 +440,12 @@ function importInventory() {
     input.click();
 }
 
-function clearInventory() {
-    const confirmed = confirm("This will delete ALL inventory items on this device. Are you sure?");
+async function clearInventory() {
+    const confirmed = confirm("This will delete ALL inventory items. Are you sure?");
     if (!confirmed) return;
-    saveInventory([]);
+    const items = loadInventory();
+    await Promise.all(items.map(item => API.deleteInventoryItem(item.id)));
+    await syncInventory();
     renderInventory();
 }
 
@@ -503,10 +514,17 @@ function resetCheckboxes() {
     });
 }
 
-document.addEventListener("change", function (e) {
+document.addEventListener("change", async function (e) {
     if (e.target.type === "checkbox") {
         const item = e.target.closest(".shop-item");
-        if (item) item.classList.toggle("checked");
+        if (item) {
+            item.classList.toggle("checked");
+            const itemKey = e.target.getAttribute("data-item-key");
+            if (itemKey) {
+                const isChecked = e.target.checked;
+                await API.saveShoppingCheck(weeklyPlan.weekLabel, itemKey, isChecked).catch(console.error);
+            }
+        }
     }
 });
 
@@ -533,7 +551,9 @@ function buildShoppingListFromPlan() {
 
         categories[targetCategory].push({
             label,
-            quantityText: `${qty} ${unit}`.trim()
+            quantityText: `${qty} ${unit}`.trim(),
+            category,
+            unit
         });
     }
 
@@ -575,6 +595,9 @@ function buildShoppingListFromPlan() {
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
+
+            const itemKey = `${item.category}::${item.label.toLowerCase()}::${(item.unit || "").toLowerCase()}`;
+            checkbox.setAttribute("data-item-key", itemKey);
 
             const nameSpan = document.createElement("span");
             nameSpan.style.flex = "2";
@@ -622,14 +645,15 @@ function updateCostSummary() {
   `;
 }
 
-function addShoppingListToInventory() {
+async function addShoppingListToInventory() {
     const itemLabels = Array.from(document.querySelectorAll(".shop-item"));
     if (!itemLabels.length) {
         alert("No shopping items found.");
         return;
     }
 
-    const currentInventory = loadInventory();
+    const currentInventory = await API.getInventory();
+    const itemsToSave = [];
 
     itemLabels.forEach((itemEl, index) => {
         const checkbox = itemEl.querySelector("input[type='checkbox']");
@@ -643,11 +667,11 @@ function addShoppingListToInventory() {
         if (qtyText) {
             const parts = qtyText.split(/\s+/);
             const maybeQty = parseFloat(parts[0].replace(",", "."));
-            if (!isNaN(maybeQty)) {
+            if (!maybeQty || isNaN(maybeQty)) {
+                unit = qtyText;
+            } else {
                 quantity = maybeQty;
                 unit = parts.slice(1).join(" ") || "";
-            } else {
-                unit = qtyText;
             }
         }
 
@@ -664,15 +688,18 @@ function addShoppingListToInventory() {
 
             if (existing) {
                 existing.quantity += quantity;
+                itemsToSave.push(existing);
             } else {
-                currentInventory.push({
+                const newItem = {
                     id: `inv-${Date.now()}-${Math.random().toString(16).slice(2)}`,
                     name,
                     quantity,
                     unit,
                     category,
                     dateAdded: new Date().toISOString()
-                });
+                };
+                currentInventory.push(newItem);
+                itemsToSave.push(newItem);
             }
         }
 
@@ -682,7 +709,8 @@ function addShoppingListToInventory() {
         }
     });
 
-    saveInventory(currentInventory);
+    await Promise.all(itemsToSave.map(item => API.saveInventoryItem(item)));
+    await syncInventory();
     renderInventory();
     alert("Remaining shopping list items have been added to inventory.");
 }
@@ -1007,23 +1035,25 @@ document.addEventListener("click", function (e) {
 });
 
 // =========================
-// 8. WEEKLY STAPLES (LOCAL STORAGE + UI)
+// 8. WEEKLY STAPLES (API PERSISTENCE)
 // =========================
 
-const STAPLES_STORAGE_KEY = "mealPlanner.weeklyStaples";
+let cachedStaples = [];
 
 function loadWeeklyStaples() {
-    try {
-        const raw = localStorage.getItem(STAPLES_STORAGE_KEY);
-        if (!raw) return [];
-        return JSON.parse(raw);
-    } catch {
-        return [];
-    }
+    return cachedStaples;
 }
 
 function saveWeeklyStaples(items) {
-    localStorage.setItem(STAPLES_STORAGE_KEY, JSON.stringify(items));
+    cachedStaples = items;
+}
+
+async function syncStaples() {
+    try {
+        cachedStaples = await API.getStaples();
+    } catch (err) {
+        console.error("Failed to sync staples:", err);
+    }
 }
 
 function renderStaples() {
@@ -1077,9 +1107,9 @@ function renderStaples() {
             removeBtn.textContent = "✕";
             removeBtn.style.padding = "2px 6px";
             removeBtn.style.fontSize = "11px";
-            removeBtn.onclick = () => {
-                const current = loadWeeklyStaples().filter(x => x.id !== item.id);
-                saveWeeklyStaples(current);
+            removeBtn.onclick = async () => {
+                await API.deleteStapleItem(item.id);
+                await syncStaples();
                 renderStaples();
                 recomputeShoppingData(); // so shopping list updates
             };
@@ -1102,7 +1132,7 @@ function renderStaples() {
     renderStaplesCategory("📦", "Other Items", "other");
 }
 
-function addStapleItem() {
+async function addStapleItem() {
     const name = document.getElementById("stapleNameInput").value.trim();
     const quantity = parseFloat(document.getElementById("stapleQuantityInput").value) || 1;
     const unit = normaliseUnit(document.getElementById("stapleUnitSelect").value);
@@ -1113,24 +1143,28 @@ function addStapleItem() {
         return;
     }
 
+    await syncStaples();
     const items = loadWeeklyStaples();
     const existing = items.find(
         i => i.name.toLowerCase() === name.toLowerCase() && i.unit === unit && i.category === category
     );
 
+    let stapleToSave;
     if (existing) {
         existing.quantity += quantity;
+        stapleToSave = existing;
     } else {
-        items.push({
+        stapleToSave = {
             id: `staple-${Date.now()}-${Math.random().toString(16).slice(2)}`,
             name,
             quantity,
             unit,
             category
-        });
+        };
     }
 
-    saveWeeklyStaples(items);
+    await API.saveStapleItem(stapleToSave);
+    await syncStaples();
     renderStaples();
     recomputeShoppingData();
 
@@ -1222,25 +1256,121 @@ function importWeeklyStaples() {
     input.click();
 }
 
-function clearWeeklyStaples() {
-    const confirmed = confirm("This will delete ALL weekly staples.json on this device. Are you sure?");
+async function clearWeeklyStaples() {
+    const confirmed = confirm("This will delete ALL weekly staples. Are you sure?");
     if (!confirmed) return;
 
-    saveWeeklyStaples([]);
+    const items = loadWeeklyStaples();
+    await Promise.all(items.map(item => API.deleteStapleItem(item.id)));
+    await syncStaples();
     renderStaples();
     recomputeShoppingData();
 }
 
 // =========================
-// 9. INITIALISATION
+// 9. SYNCHRONISATION & INITIALISATION
 // =========================
 
-document.addEventListener("DOMContentLoaded", () => {
+let isSyncing = false;
+
+async function syncAllData() {
+    if (isSyncing) return;
+    isSyncing = true;
+    try {
+        console.log("Syncing all data from D1 database...");
+        
+        // 1. Verify Authentication
+        const session = await API.checkSession();
+        if (!session.authenticated) {
+            API.showLoginOverlay();
+            return;
+        }
+
+        // Show header logout button
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) logoutBtn.style.display = "block";
+
+        // 2. Fetch all data in parallel
+        const [plan, inventoryList, staplesList, recipesList, checkedList] = await Promise.all([
+            API.getWeeklyPlan(weeklyPlan.weekLabel),
+            API.getInventory(),
+            API.getStaples(),
+            API.getRecipes(),
+            API.getShoppingChecks(weeklyPlan.weekLabel)
+        ]);
+
+        if (plan) cachedWeeklyPlan = plan;
+        cachedInventory = inventoryList;
+        cachedStaples = staplesList;
+
+        if (recipesList && recipesList.length > 0) {
+            recipeBank.length = 0;
+            recipeBank.push(...recipesList);
+        }
+
+        // Store active shopping list ticked states
+        window.shoppingChecksMap = checkedList.reduce((acc, c) => {
+            acc[c.item_key] = c.is_checked === 1;
+            return acc;
+        }, {});
+
+        // 3. Render all UI modules using new server data
+        weeklyPlan = loadWeeklyPlan();
+        recipes = getWeeklyRecipes();
+        populateMealPlans();
+        populateRecipesTab();
+        renderInventory();
+        renderStaples();
+        recomputeShoppingData();
+
+        // 4. Restore Checked Checkbox UI elements
+        restoreShoppingCheckboxes();
+
+    } catch (err) {
+        console.error("Synchronization failed:", err);
+    } finally {
+        isSyncing = false;
+    }
+}
+
+function restoreShoppingCheckboxes() {
+    document.querySelectorAll("#shoppingList .shop-item").forEach(itemEl => {
+        const checkbox = itemEl.querySelector("input[type='checkbox']");
+        if (!checkbox) return;
+        const key = checkbox.getAttribute("data-item-key");
+        if (key && window.shoppingChecksMap && window.shoppingChecksMap[key]) {
+            checkbox.checked = true;
+            itemEl.classList.add("checked");
+        } else {
+            checkbox.checked = false;
+            itemEl.classList.remove("checked");
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
     renderProfiles();
-    recipes = getWeeklyRecipes();
-    populateMealPlans();
-    populateRecipesTab();
-    renderInventory();
-    renderStaples();
-    recomputeShoppingData();
+
+    // Inject custom CSS styling for spinner and checked items
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .checked {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Initial server sync
+    await syncAllData();
+
+    // Dynamic focus synching for multi-device freshness
+    window.addEventListener("focus", async () => {
+        console.log("Window focused - synchronizing state in background...");
+        await syncAllData();
+    });
 });
