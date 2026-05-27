@@ -4,7 +4,12 @@
   "description": "",
   "main": "js/data.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "wrangler": "^4.95.0"
+  }
 }
