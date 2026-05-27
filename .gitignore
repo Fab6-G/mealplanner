@@ -2,13 +2,19 @@
 node_modules/
 worker/node_modules/
 
-# Cloudflare Wrangler local state & dev vars
+# Cloudflare Wrangler local state & dev vars (both root and worker subfolder)
 .wrangler/
+worker/.wrangler/
 .dev.vars
+worker/.dev.vars
 
 # IDE config directories
 .idea/
 .vscode/
+
+# OS noise
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log

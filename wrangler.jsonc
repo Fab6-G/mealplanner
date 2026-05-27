@@ -1,0 +1,25 @@
+// wrangler.jsonc
+// Root-level Cloudflare Workers + Pages configuration.
+// This config is used by Cloudflare Pages CI to deploy the frontend
+// and bind it to the mealplanner-api Worker and D1 database.
+{
+  "name": "mealplanner-api",
+  "main": "worker/src/index.js",
+  "compatibility_date": "2025-07-18",
+
+  // Static frontend assets — ONLY serve from the public/ folder,
+  // never from the repo root or node_modules.
+  "assets": {
+    "directory": "./public"
+  },
+
+  // D1 database binding — must match what the Worker code uses (env.DB)
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mealplanner-db",
+      "database_id": "6cb48ac0-a8ce-4c76-88ab-31a0c2a228c7",
+      "migrations_dir": "worker/migrations"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# .assetsignore
+# Cloudflare Workers static asset upload exclusions.
+# These patterns are relative to the assets.directory (./public).
+# Since public/ only contains frontend files this is a safety net
+# in case the directory ever gets polluted.
+
+# Dependency directories
+node_modules/
+
+# Build / dev tooling
+.wrangler/
+.dev.vars
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
