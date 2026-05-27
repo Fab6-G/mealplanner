@@ -1,5 +1,5 @@
 # wrangler.toml
-name = "mealplanner-api"
+name = "mealplanner"
 main = "src/index.js"
 compatibility_date = "2026-05-26"
 
