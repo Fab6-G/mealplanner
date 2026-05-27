@@ -3,7 +3,7 @@
 // This config is used by Cloudflare Pages CI to deploy the frontend
 // and bind it to the mealplanner-api Worker and D1 database.
 {
-  "name": "mealplanner-api",
+  "name": "mealplanner",
   "main": "worker/src/index.js",
   "compatibility_date": "2025-07-18",
 
