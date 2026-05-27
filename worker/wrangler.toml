@@ -8,5 +8,5 @@ compatibility_date = "2026-05-26"
 [[d1_databases]]
 binding = "DB"
 database_name = "mealplanner-db"
-database_id = "local-dev-id" # Will be replaced by production database ID on wrangler deploy
+database_id = "6cb48ac0-a8ce-4c76-88ab-31a0c2a228c7" 
 migrations_dir = "migrations"
