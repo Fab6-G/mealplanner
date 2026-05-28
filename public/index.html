@@ -162,19 +162,19 @@
                 <h3>📋 Weekly Overview</h3>
                 <div class="stats" style="margin-top: 15px;">
                     <div class="stat">
-                        <div class="stat-value">35</div>
+                        <div class="stat-value" id="dashboard-meals-count">0</div>
                         <div class="stat-label">Total Meals Planned</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">28</div>
+                        <div class="stat-value" id="dashboard-ingredients-count">0</div>
                         <div class="stat-label">Unique Ingredients</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">~£95</div>
+                        <div class="stat-value" id="dashboard-cost">~£0</div>
                         <div class="stat-label">Est. Tesco Cost</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">2</div>
+                        <div class="stat-value" id="dashboard-prep-days">0</div>
                         <div class="stat-label">Prep Days</div>
                     </div>
                 </div>
@@ -210,6 +210,9 @@
                                 </div>
                                 <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
                                     📖 View Full Recipe & Instructions
+                                </button>
+                                <button class="btn-secondary remove-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);">
+                                    🗑 Remove from Plan
                                 </button>
                             </div>
                         </div>
@@ -294,15 +297,15 @@
                     <h3 style="color: var(--color-primary); margin-bottom: 10px;">💰 Cost Summary</h3>
                     <div class="stats">
                         <div class="stat">
-                            <div class="stat-value" style="color: var(--color-primary);">£125.90</div>
+                            <div class="stat-value" id="shopping-cost-total" style="color: var(--color-primary);">£0.00</div>
                             <div class="stat-label">Estimated Total</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-value" style="color: var(--color-success);">~£18/day</div>
+                            <div class="stat-value" id="shopping-cost-per-day" style="color: var(--color-success);">~£0.00/day</div>
                             <div class="stat-label">Per Day Cost</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-value" style="color: var(--color-info);">28</div>
+                            <div class="stat-value" id="shopping-cost-items" style="color: var(--color-info);">0</div>
                             <div class="stat-label">Unique Items</div>
                         </div>
                         <div class="stat">

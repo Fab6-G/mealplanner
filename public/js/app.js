@@ -56,17 +56,6 @@ document.addEventListener("DOMContentLoaded", function () {
 // 1. WEEKLY PLAN (API PERSISTENCE)
 // =========================
 
-let cachedWeeklyPlan = null;
-
-function loadWeeklyPlan() {
-    return cachedWeeklyPlan || defaultWeeklyPlan;
-}
-
-function saveWeeklyPlan(plan) {
-    cachedWeeklyPlan = plan;
-    API.saveWeeklyPlan(plan.weekLabel, plan.days).catch(console.error);
-}
-
 const defaultWeeklyPlan = {
     weekLabel: "This week",
     days: [
@@ -80,8 +69,37 @@ const defaultWeeklyPlan = {
     ]
 };
 
-// Initial local plan copy
-let weeklyPlan = structuredClone(defaultWeeklyPlan);
+const State = {
+    weeklyPlan: structuredClone(defaultWeeklyPlan),
+    inventory: [],
+    staples: [],
+    shoppingChecks: {},
+
+    renderAll() {
+        renderProfiles();
+        populateMealPlans();
+        populateRecipesTab();
+        renderInventory();
+        renderStaples();
+        recomputeShoppingData();
+        renderDashboardOverview();
+        restoreShoppingCheckboxes();
+    }
+};
+
+let cachedWeeklyPlan = null;
+
+function loadWeeklyPlan() {
+    return State.weeklyPlan;
+}
+
+function saveWeeklyPlan(plan) {
+    State.weeklyPlan = plan;
+    API.saveWeeklyPlan(plan.weekLabel, plan.days).catch(console.error);
+}
+
+// Initial local plan copy reference
+let weeklyPlan = State.weeklyPlan;
 
 // =========================
 // 2. PROFILE RENDERING
@@ -177,10 +195,11 @@ function getRecipeById(id) {
 }
 
 function getWeeklyRecipes() {
-    if (!weeklyPlan || !Array.isArray(weeklyPlan.days)) return [];
+    const plan = State.weeklyPlan;
+    if (!plan || !Array.isArray(plan.days)) return [];
     const used = new Set();
     const list = [];
-    weeklyPlan.days.forEach(entry => {
+    plan.days.forEach(entry => {
         if (!entry.recipeId) return;
         const rec = getRecipeById(entry.recipeId);
         if (rec && !used.has(rec.id)) {
@@ -191,7 +210,7 @@ function getWeeklyRecipes() {
     return list;
 }
 
-// Dynamic recipes (for this week)
+// Keep the global recipes variable as a fallback getter or initial copy
 let recipes = getWeeklyRecipes();
 
 // Shopping list backing data
@@ -200,7 +219,8 @@ let combinedIngredients = [];
 
 // Recompute ingredients & combinedIngredients from current weekly recipes
 function recomputeShoppingData() {
-    allIngredients = getAllIngredientsNormalised(recipes); // from data.js
+    const currentRecipes = getWeeklyRecipes();
+    allIngredients = getAllIngredientsNormalised(currentRecipes); // from data.js
     combinedIngredients = buildCombinedIngredients(allIngredients); // from data.js
     buildShoppingListFromPlan();
 }
@@ -216,16 +236,18 @@ function recomputeShoppingData() {
 let cachedInventory = [];
 
 function loadInventory() {
-    return cachedInventory;
+    return State.inventory;
 }
 
 function saveInventory(items) {
-    cachedInventory = items;
+    State.inventory = items;
+    State.renderAll();
 }
 
 async function syncInventory() {
     try {
-        cachedInventory = await API.getInventory();
+        State.inventory = await API.getInventory();
+        State.renderAll();
     } catch (err) {
         console.error("Failed to sync inventory:", err);
     }
@@ -630,19 +652,39 @@ function buildShoppingListFromPlan() {
 
 // Placeholder summary while you have no catalog
 function updateCostSummary() {
-    const costCard = document.querySelector('[style*="primary-light"]');
-    if (!costCard) return;
-
     const weeklyStaples = loadWeeklyStaples();
     const totalLines = combinedIngredients.length + weeklyStaples.length;
+    const estimatedCost = totalLines * 3.50;
+    const perDayCost = estimatedCost / 7;
 
-    costCard.innerHTML = `
-    <div style="font-size: 13px;">
-      Estimated items this week: <strong>${totalLines}</strong>
-      <br>
-      (Recipes: ${combinedIngredients.length}, Staples: ${weeklyStaples.length})
-    </div>
-  `;
+    const totalEl = document.getElementById("shopping-cost-total");
+    const perDayEl = document.getElementById("shopping-cost-per-day");
+    const itemsEl = document.getElementById("shopping-cost-items");
+
+    if (totalEl) totalEl.textContent = `£${estimatedCost.toFixed(2)}`;
+    if (perDayEl) perDayEl.textContent = `~£${perDayCost.toFixed(2)}/day`;
+    if (itemsEl) itemsEl.textContent = `${totalLines}`;
+}
+
+function renderDashboardOverview() {
+    const plannedDinnersCount = State.weeklyPlan.days.filter(d => d.recipeId).length;
+    const weeklyStaplesCount = State.staples.length;
+    const totalIngredientsCount = combinedIngredients.length + weeklyStaplesCount;
+    const estimatedCost = totalIngredientsCount * 3.50;
+
+    const mealsCountEl = document.getElementById("dashboard-meals-count");
+    const ingredientsCountEl = document.getElementById("dashboard-ingredients-count");
+    const costEl = document.getElementById("dashboard-cost");
+    const prepDaysEl = document.getElementById("dashboard-prep-days");
+
+    if (mealsCountEl) mealsCountEl.textContent = `${plannedDinnersCount * 2}`; // 2 people
+    if (ingredientsCountEl) ingredientsCountEl.textContent = `${totalIngredientsCount}`;
+    if (costEl) costEl.textContent = `~£${estimatedCost.toFixed(0)}`;
+    
+    const uniqueRecipesCount = new Set(State.weeklyPlan.days.map(d => d.recipeId).filter(Boolean)).size;
+    if (prepDaysEl) {
+        prepDaysEl.textContent = uniqueRecipesCount > 0 ? `${Math.max(1, Math.min(2, uniqueRecipesCount))}` : "0";
+    }
 }
 
 async function addShoppingListToInventory() {
@@ -725,11 +767,11 @@ function populateMealPlans() {
 
     const container = tab.querySelector(".grid");
     const template = document.getElementById("day-template");
-    if (!container || !template || !weeklyPlan || !Array.isArray(weeklyPlan.days)) return;
+    if (!container || !template || !State.weeklyPlan || !Array.isArray(State.weeklyPlan.days)) return;
 
     container.innerHTML = "";
 
-    weeklyPlan.days.forEach(entry => {
+    State.weeklyPlan.days.forEach((entry, index) => {
         const recipe = entry.recipeId ? getRecipeById(entry.recipeId) : null;
         const clone = template.content.cloneNode(true);
 
@@ -741,6 +783,7 @@ function populateMealPlans() {
         const stefPortion = clone.querySelector(".stef-portion");
         const timeSpan = clone.querySelector(".recipe-time");
         const viewRecipeBtn = clone.querySelector(".view-recipe");
+        const removeBtn = clone.querySelector(".remove-recipe");
 
         if (!recipe) {
             if (mealName) mealName.textContent = "No recipe selected";
@@ -748,6 +791,7 @@ function populateMealPlans() {
             if (stefPortion) stefPortion.textContent = "";
             if (timeSpan) timeSpan.textContent = "N/A";
             if (viewRecipeBtn) viewRecipeBtn.disabled = true;
+            if (removeBtn) removeBtn.style.display = "none";
         } else {
             if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
@@ -769,6 +813,11 @@ function populateMealPlans() {
                 viewRecipeBtn.disabled = false;
                 viewRecipeBtn.onclick = () => showRecipeModal(recipe);
             }
+
+            if (removeBtn) {
+                removeBtn.style.display = "block";
+                removeBtn.onclick = () => removeRecipeFromPlan(index);
+            }
         }
 
         container.appendChild(clone);
@@ -786,8 +835,8 @@ function populateRecipesTab() {
     grid.innerHTML = "";
 
     const usageById = {};
-    if (weeklyPlan && Array.isArray(weeklyPlan.days)) {
-        weeklyPlan.days.forEach(d => {
+    if (State.weeklyPlan && Array.isArray(State.weeklyPlan.days)) {
+        State.weeklyPlan.days.forEach(d => {
             if (d.recipeId) usageById[d.recipeId] = d.day;
         });
     }
@@ -871,45 +920,85 @@ function addRecipeToPlanFromButton(btn) {
     }
 
     addRecipeToPlan(recipeId);
-
-    btn.textContent = "✅ In plan";
-    btn.disabled = true;
-    btn.style.background = "var(--color-success)";
-    btn.style.color = "#fff";
 }
 
-// Add/clear must call both render functions
-function addRecipeToPlan(recipeId) {
-    if (!weeklyPlan || !Array.isArray(weeklyPlan.days)) {
-        weeklyPlan = structuredClone(defaultWeeklyPlan);
+// Add/clear/remove dinners optimistically
+async function addRecipeToPlan(recipeId) {
+    if (!State.weeklyPlan || !Array.isArray(State.weeklyPlan.days)) {
+        State.weeklyPlan = structuredClone(defaultWeeklyPlan);
     }
 
-    const firstEmptyIndex = weeklyPlan.days.findIndex(d => !d.recipeId);
+    const firstEmptyIndex = State.weeklyPlan.days.findIndex(d => !d.recipeId);
     if (firstEmptyIndex === -1) {
         alert("This week's plan is full (Monday–Sunday). Clear or edit it before adding more.");
         return;
     }
 
-    weeklyPlan.days[firstEmptyIndex].recipeId = recipeId;
-    saveWeeklyPlan(weeklyPlan);
+    // 1. Fallback for rollback
+    const fallbackPlan = structuredClone(State.weeklyPlan);
 
-    recipes = getWeeklyRecipes();
-    populateMealPlans();
-    populateRecipesTab();
-    recomputeShoppingData();
+    // 2. Mutate state optimistically
+    State.weeklyPlan.days[firstEmptyIndex].recipeId = recipeId;
+    
+    // 3. Immediately re-render
+    State.renderAll();
+
+    // 4. Save to API in background
+    try {
+        await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
+    } catch (err) {
+        // 5. Rollback on failure
+        showToast("Failed to save meal plan. Changes rolled back.", "error");
+        State.weeklyPlan = fallbackPlan;
+        State.renderAll();
+    }
 }
 
-function clearWeeklyPlan() {
+async function removeRecipeFromPlan(dayIndex) {
+    if (!State.weeklyPlan || !Array.isArray(State.weeklyPlan.days)) return;
+
+    // 1. Fallback for rollback
+    const fallbackPlan = structuredClone(State.weeklyPlan);
+
+    // 2. Mutate state optimistically
+    State.weeklyPlan.days[dayIndex].recipeId = null;
+
+    // 3. Immediately re-render
+    State.renderAll();
+
+    // 4. Save to API in background
+    try {
+        await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
+    } catch (err) {
+        // 5. Rollback on failure
+        showToast("Failed to remove recipe. Changes rolled back.", "error");
+        State.weeklyPlan = fallbackPlan;
+        State.renderAll();
+    }
+}
+
+async function clearWeeklyPlan() {
     const ok = confirm("Clear all planned dinners for this week?");
     if (!ok) return;
 
-    weeklyPlan = structuredClone(defaultWeeklyPlan);
-    saveWeeklyPlan(weeklyPlan);
+    // 1. Fallback for rollback
+    const fallbackPlan = structuredClone(State.weeklyPlan);
 
-    recipes = getWeeklyRecipes();
-    populateMealPlans();
-    populateRecipesTab();
-    recomputeShoppingData();
+    // 2. Mutate state optimistically
+    State.weeklyPlan = structuredClone(defaultWeeklyPlan);
+
+    // 3. Immediately re-render
+    State.renderAll();
+
+    // 4. Save to API in background
+    try {
+        await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
+    } catch (err) {
+        // 5. Rollback on failure
+        showToast("Failed to clear week plan. Changes rolled back.", "error");
+        State.weeklyPlan = fallbackPlan;
+        State.renderAll();
+    }
 }
 
 // =========================
@@ -1041,16 +1130,18 @@ document.addEventListener("click", function (e) {
 let cachedStaples = [];
 
 function loadWeeklyStaples() {
-    return cachedStaples;
+    return State.staples;
 }
 
 function saveWeeklyStaples(items) {
-    cachedStaples = items;
+    State.staples = items;
+    State.renderAll();
 }
 
 async function syncStaples() {
     try {
-        cachedStaples = await API.getStaples();
+        State.staples = await API.getStaples();
+        State.renderAll();
     } catch (err) {
         console.error("Failed to sync staples:", err);
     }
@@ -1292,39 +1383,29 @@ async function syncAllData() {
 
         // 2. Fetch all data in parallel
         const [plan, inventoryList, staplesList, recipesList, checkedList] = await Promise.all([
-            API.getWeeklyPlan(weeklyPlan.weekLabel),
+            API.getWeeklyPlan(State.weeklyPlan.weekLabel),
             API.getInventory(),
             API.getStaples(),
             API.getRecipes(),
-            API.getShoppingChecks(weeklyPlan.weekLabel)
+            API.getShoppingChecks(State.weeklyPlan.weekLabel)
         ]);
-
-        if (plan) cachedWeeklyPlan = plan;
-        cachedInventory = inventoryList;
-        cachedStaples = staplesList;
 
         if (recipesList && recipesList.length > 0) {
             recipeBank.length = 0;
             recipeBank.push(...recipesList);
         }
 
-        // Store active shopping list ticked states
-        window.shoppingChecksMap = checkedList.reduce((acc, c) => {
+        // Store into centralised State
+        State.weeklyPlan = plan || structuredClone(defaultWeeklyPlan);
+        State.inventory = inventoryList || [];
+        State.staples = staplesList || [];
+        State.shoppingChecks = checkedList.reduce((acc, c) => {
             acc[c.item_key] = c.is_checked === 1;
             return acc;
         }, {});
 
         // 3. Render all UI modules using new server data
-        weeklyPlan = loadWeeklyPlan();
-        recipes = getWeeklyRecipes();
-        populateMealPlans();
-        populateRecipesTab();
-        renderInventory();
-        renderStaples();
-        recomputeShoppingData();
-
-        // 4. Restore Checked Checkbox UI elements
-        restoreShoppingCheckboxes();
+        State.renderAll();
 
     } catch (err) {
         console.error("Synchronization failed:", err);
@@ -1338,7 +1419,7 @@ function restoreShoppingCheckboxes() {
         const checkbox = itemEl.querySelector("input[type='checkbox']");
         if (!checkbox) return;
         const key = checkbox.getAttribute("data-item-key");
-        if (key && window.shoppingChecksMap && window.shoppingChecksMap[key]) {
+        if (key && State.shoppingChecks && State.shoppingChecks[key]) {
             checkbox.checked = true;
             itemEl.classList.add("checked");
         } else {
@@ -1346,6 +1427,57 @@ function restoreShoppingCheckboxes() {
             itemEl.classList.remove("checked");
         }
     });
+}
+
+function showToast(message, type = "error") {
+    const container = document.getElementById("toastContainer") || (() => {
+        const c = document.createElement("div");
+        c.id = "toastContainer";
+        c.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000000;
+            pointer-events: none;
+        `;
+        document.body.appendChild(c);
+        return c;
+    })();
+
+    const toast = document.createElement("div");
+    toast.style.cssText = `
+        padding: 12px 20px;
+        background: ${type === "error" ? "rgba(239, 68, 68, 0.9)" : "rgba(16, 185, 129, 0.9)"};
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid ${type === "error" ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)"};
+        color: white;
+        border-radius: 10px;
+        font-family: 'Outfit', 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: auto;
+    `;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    // Trigger reflow
+    toast.offsetHeight;
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-20px)";
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
