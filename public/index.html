@@ -16,7 +16,10 @@
                 <h1>🥗 Couples Meal Planner</h1>
                 <p class="subtitle">Personalized nutrition for fitness goals • Tesco ready • Inventory tracking</p>
             </div>
-            <button id="logoutBtn" class="btn-secondary" onclick="API.logout()" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; display: none;">Logout</button>
+            <div style="display: flex; gap: 10px;">
+                <button id="settingsBtn" class="btn-secondary" onclick="showSettingsModal()" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; display: none;">⚙️ Settings</button>
+                <button id="logoutBtn" class="btn-secondary" onclick="API.logout()" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; display: none;">Logout</button>
+            </div>
         </header>
 
         <div class="tabs">
@@ -30,132 +33,8 @@
 
         <!-- DASHBOARD TAB -->
         <div id="dashboard" class="tab-content active">
-            <div class="grid grid-2">
-                <!-- Fabian Profile -->
-                <div class="card" id="profile-fabian">
-                    <div class="profile-header">
-                        <div class="profile-avatar">💪</div>
-                        <div class="profile-info">
-                            <h4 id="fabian-name">You (Muscle Gain)</h4>
-                            <p id="fabian-meta">29M • 182cm • 82kg • Very Active</p>
-                            <p id="fabian-goal" style="color: var(--color-success); font-weight: 600;">↗ 500 cal surplus</p>
-                        </div>
-                    </div>
-
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value" id="fabian-calories">3,500</div>
-                            <div class="stat-label">Calories</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="fabian-protein">170g</div>
-                            <div class="stat-label">Protein</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="fabian-carbs">450g</div>
-                            <div class="stat-label">Carbs</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="fabian-fats">120g</div>
-                            <div class="stat-label">Fats</div>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">Daily Macro Target</h3>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="fabian-protein-label">Protein: 170g (49%)</span>
-                            <span>Protein</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill protein-fill" id="fabian-protein-bar" style="width: 49%;">49%</div>
-                        </div>
-                    </div>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="fabian-carbs-label">Carbs: 450g (39%)</span>
-                            <span>Carbs</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill carb-fill" id="fabian-carbs-bar" style="width: 39%;">39%</div>
-                        </div>
-                    </div>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="fabian-fats-label">Fats: 120g (31%)</span>
-                            <span>Fats</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill fat-fill" id="fabian-fats-bar" style="width: 31%;">31%</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stefanie Profile -->
-                <div class="card" id="profile-stefanie">
-                    <div class="profile-header">
-                        <div class="profile-avatar" style="background: #FFE8E8; color: #E74C3C;">🏃‍♀️</div>
-                        <div class="profile-info">
-                            <h4 id="stef-name">Your Wife (Toning)</h4>
-                            <p id="stef-meta">26F • Weight Loss & Tone</p>
-                            <p id="stef-goal" style="color: var(--color-danger); font-weight: 600;">↘ 500 cal deficit</p>
-                        </div>
-                    </div>
-
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value" id="stef-calories">1,900</div>
-                            <div class="stat-label">Calories</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="stef-protein">130g</div>
-                            <div class="stat-label">Protein</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="stef-carbs">220g</div>
-                            <div class="stat-label">Carbs</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="stef-fats">65g</div>
-                            <div class="stat-label">Fats</div>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">Daily Macro Target</h3>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="stef-protein-label">Protein: 130g (27%)</span>
-                            <span>Protein</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill protein-fill" id="stef-protein-bar" style="width: 27%;">27%</div>
-                        </div>
-                    </div>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="stef-carbs-label">Carbs: 220g (46%)</span>
-                            <span>Carbs</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill carb-fill" id="stef-carbs-bar" style="width: 46%;">46%</div>
-                        </div>
-                    </div>
-
-                    <div class="macro-bar">
-                        <div class="macro-label">
-                            <span id="stef-fats-label">Fats: 65g (31%)</span>
-                            <span>Fats</span>
-                        </div>
-                        <div class="macro-progress">
-                            <div class="macro-fill fat-fill" id="stef-fats-bar" style="width: 31%;">31%</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="grid grid-2" id="profileGrid">
+                <!-- Dynamically populated from household members -->
             </div>
 
             <div class="card" style="margin-top: 20px;">
@@ -448,6 +327,17 @@
     <div class="modal" id="recipeModal">
         <div class="modal-content recipe-modal">
             <!-- JavaScript will populate content -->
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content" style="max-width: 700px; padding: 30px; position: relative;">
+            <button class="modal-close" onclick="closeSettingsModal()">×</button>
+            <h2 style="margin-bottom: 20px; background: linear-gradient(135deg, var(--color-primary), var(--color-success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⚙️ Household Settings</h2>
+            <div id="settingsContainer" style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Populated dynamically via JS -->
+            </div>
         </div>
     </div>
 </body>

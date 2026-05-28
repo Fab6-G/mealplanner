@@ -544,6 +544,134 @@ export default {
         }
       }
 
+      // 6. Household API Endpoints
+      // POST /api/household/setup
+      if (method === "POST" && path === "/api/household/setup") {
+        const { members } = await request.json();
+        if (!Array.isArray(members) || members.length === 0) {
+          return new Response(JSON.stringify({ error: "members array required." }), { status: 400, headers: corsHeaders });
+        }
+
+        // Clean up any existing household (cascade delete handles members, macros, allergies)
+        await db.prepare("DELETE FROM households WHERE user_id = ?").bind(userId).run();
+
+        // Create household
+        const householdRes = await db.prepare("INSERT INTO households (user_id) VALUES (?)").bind(userId).run();
+        const householdId = householdRes.meta.last_row_id;
+
+        // Create members, macro goals, and allergies
+        for (const m of members) {
+          if (!m.name || !m.age || !m.sex || !m.weight_kg || !m.height_cm || !m.macro_goals) {
+            return new Response(JSON.stringify({ error: "Missing member required fields (name, age, sex, weight_kg, height_cm, macro_goals)." }), {
+              status: 400,
+              headers: corsHeaders
+            });
+          }
+
+          const memberRes = await db.prepare(
+            "INSERT INTO household_members (household_id, name, age, sex, weight_kg, height_cm) VALUES (?, ?, ?, ?, ?, ?)"
+          ).bind(householdId, m.name, Number(m.age), m.sex, Number(m.weight_kg), Number(m.height_cm)).run();
+          const memberId = memberRes.meta.last_row_id;
+
+          const { calories, protein_g, carbs_g, fat_g } = m.macro_goals;
+          await db.prepare(
+            "INSERT INTO macro_goals (member_id, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)"
+          ).bind(memberId, Number(calories), Number(protein_g), Number(carbs_g), Number(fat_g)).run();
+
+          if (Array.isArray(m.allergies)) {
+            for (const allergy of m.allergies) {
+              await db.prepare(
+                "INSERT INTO member_allergies (member_id, allergy) VALUES (?, ?)"
+              ).bind(memberId, allergy).run();
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, message: "Household setup complete." }), { status: 201, headers: corsHeaders });
+      }
+
+      // GET /api/household
+      if (method === "GET" && path === "/api/household") {
+        const household = await db.prepare("SELECT * FROM households WHERE user_id = ?").bind(userId).first();
+        if (!household) {
+          return new Response(JSON.stringify({ error: "Household not found." }), { status: 404, headers: corsHeaders });
+        }
+
+        const members = await db.prepare("SELECT * FROM household_members WHERE household_id = ? ORDER BY id ASC").bind(household.id).all();
+        const membersList = [];
+
+        for (const member of members.results) {
+          const macros = await db.prepare("SELECT * FROM macro_goals WHERE member_id = ?").bind(member.id).first();
+          const allergies = await db.prepare("SELECT allergy FROM member_allergies WHERE member_id = ?").bind(member.id).all();
+
+          membersList.push({
+            id: member.id,
+            name: member.name,
+            age: member.age,
+            sex: member.sex,
+            weight_kg: member.weight_kg,
+            height_cm: member.height_cm,
+            macro_goals: macros ? {
+              calories: macros.calories,
+              protein_g: macros.protein_g,
+              carbs_g: macros.carbs_g,
+              fat_g: macros.fat_g
+            } : null,
+            allergies: allergies.results.map(a => a.allergy)
+          });
+        }
+
+        return new Response(JSON.stringify({
+          id: household.id,
+          user_id: household.user_id,
+          created_at: household.created_at,
+          members: membersList
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      // PUT /api/household/member/:id
+      if (method === "PUT" && path.startsWith("/api/household/member/")) {
+        const memberId = parseInt(path.split("/").pop());
+        if (!memberId || isNaN(memberId)) {
+          return new Response(JSON.stringify({ error: "Invalid member ID." }), { status: 400, headers: corsHeaders });
+        }
+
+        const { name, age, sex, weight_kg, height_cm, macro_goals, allergies } = await request.json();
+
+        // Security check: Verify member belongs to logged-in user's household
+        const member = await db.prepare(
+          "SELECT hm.id FROM household_members hm JOIN households h ON hm.household_id = h.id WHERE hm.id = ? AND h.user_id = ?"
+        ).bind(memberId, userId).first();
+
+        if (!member) {
+          return new Response(JSON.stringify({ error: "Member not found or unauthorized." }), { status: 404, headers: corsHeaders });
+        }
+
+        // Update basic fields
+        await db.prepare(
+          "UPDATE household_members SET name = ?, age = ?, sex = ?, weight_kg = ?, height_cm = ? WHERE id = ?"
+        ).bind(name, Number(age), sex, Number(weight_kg), Number(height_cm), memberId).run();
+
+        // Update macro targets
+        if (macro_goals) {
+          await db.prepare(
+            "INSERT OR REPLACE INTO macro_goals (member_id, calories, protein_g, carbs_g, fat_g) VALUES (?, ?, ?, ?, ?)"
+          ).bind(memberId, Number(macro_goals.calories), Number(macro_goals.protein_g), Number(macro_goals.carbs_g), Number(macro_goals.fat_g)).run();
+        }
+
+        // Update allergies (if specified)
+        if (Array.isArray(allergies)) {
+          await db.prepare("DELETE FROM member_allergies WHERE member_id = ?").bind(memberId).run();
+          for (const allergy of allergies) {
+            await db.prepare("INSERT INTO member_allergies (member_id, allergy) VALUES (?, ?)")
+              .bind(memberId, allergy)
+              .run();
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, message: "Member updated successfully." }), { status: 200, headers: corsHeaders });
+      }
+
       // 404 Route Not Found
       return new Response(JSON.stringify({ error: "API Endpoint not found." }), {
         status: 404,

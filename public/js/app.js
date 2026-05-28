@@ -74,6 +74,7 @@ const State = {
     inventory: [],
     staples: [],
     shoppingChecks: {},
+    household: null,
 
     renderAll() {
         renderProfiles();
@@ -120,70 +121,95 @@ function formatGoal(profile) {
 }
 
 function renderProfiles() {
-    if (!Array.isArray(PROFILES)) return;
+    const profileGrid = document.getElementById("profileGrid");
+    if (!profileGrid) return;
 
-    const fabian = PROFILES.find(p => p.id === "fabian");
-    const stef = PROFILES.find(p => p.id === "stefanie");
+    profileGrid.innerHTML = "";
 
-    if (fabian) {
-        const activity = formatActivity(fabian.activityLevel);
-        const meta = `${fabian.age}M • ${fabian.heightCm}cm • ${fabian.weightKg}kg • ${activity}`;
-        const goalText = formatGoal(fabian);
-        const { proteinGrams, carbsGrams, fatsGrams } = fabian.macroTargets;
-        const { protein, carbs, fats } = fabian.macroDistributionPercent;
-
-        document.getElementById("fabian-name").textContent = fabian.name;
-        document.getElementById("fabian-meta").textContent = meta;
-        document.getElementById("fabian-goal").textContent = goalText;
-        document.getElementById("fabian-calories").textContent = fabian.dailyCaloriesTarget.toLocaleString();
-        document.getElementById("fabian-protein").textContent = `${proteinGrams}g`;
-        document.getElementById("fabian-carbs").textContent = `${carbsGrams}g`;
-        document.getElementById("fabian-fats").textContent = `${fatsGrams}g`;
-
-        document.getElementById("fabian-protein-label").textContent =
-            `Protein: ${proteinGrams}g (${protein}%)`;
-        document.getElementById("fabian-carbs-label").textContent =
-            `Carbs: ${carbsGrams}g (${carbs}%)`;
-        document.getElementById("fabian-fats-label").textContent =
-            `Fats: ${fatsGrams}g (${fats}%)`;
-
-        document.getElementById("fabian-protein-bar").style.width = `${protein}%`;
-        document.getElementById("fabian-protein-bar").textContent = `${protein}%`;
-        document.getElementById("fabian-carbs-bar").style.width = `${carbs}%`;
-        document.getElementById("fabian-carbs-bar").textContent = `${carbs}%`;
-        document.getElementById("fabian-fats-bar").style.width = `${fats}%`;
-        document.getElementById("fabian-fats-bar").textContent = `${fats}%`;
+    const members = State.household ? State.household.members : [];
+    
+    if (members.length === 0) {
+        profileGrid.innerHTML = `<div class="card" style="grid-column: span 2; text-align: center; color: var(--color-text-light); padding: 30px;">No household profiles found. Complete onboarding or add household members.</div>`;
+        return;
     }
 
-    if (stef) {
-        const activity = formatActivity(stef.activityLevel);
-        const meta = `${stef.age}F • ${stef.heightCm}cm • ${stef.weightKg}kg • ${activity}`;
-        const goalText = formatGoal(stef);
-        const { proteinGrams, carbsGrams, fatsGrams } = stef.macroTargets;
-        const { protein, carbs, fats } = stef.macroDistributionPercent;
+    members.forEach(member => {
+        const { calories, protein_g, carbs_g, fat_g } = member.macro_goals || { calories: 2000, protein_g: 150, carbs_g: 200, fat_g: 65 };
+        
+        const proteinPct = calories > 0 ? Math.round((protein_g * 4) / calories * 100) : 0;
+        const carbsPct = calories > 0 ? Math.round((carbs_g * 4) / calories * 100) : 0;
+        const fatPct = calories > 0 ? Math.round((fat_g * 9) / calories * 100) : 0;
 
-        document.getElementById("stef-name").textContent = stef.name;
-        document.getElementById("stef-meta").textContent = meta;
-        document.getElementById("stef-goal").textContent = goalText;
-        document.getElementById("stef-calories").textContent = stef.dailyCaloriesTarget.toLocaleString();
-        document.getElementById("stef-protein").textContent = `${proteinGrams}g`;
-        document.getElementById("stef-carbs").textContent = `${carbsGrams}g`;
-        document.getElementById("stef-fats").textContent = `${fatsGrams}g`;
+        const sexDisplay = member.sex.charAt(0).toUpperCase() + member.sex.slice(1);
+        const allergiesText = member.allergies && member.allergies.length > 0 
+            ? `Allergies: ${member.allergies.join(", ")}` 
+            : "No allergies";
 
-        document.getElementById("stef-protein-label").textContent =
-            `Protein: ${proteinGrams}g (${protein}%)`;
-        document.getElementById("stef-carbs-label").textContent =
-            `Carbs: ${carbsGrams}g (${carbs}%)`;
-        document.getElementById("stef-fats-label").textContent =
-            `Fats: ${fatsGrams}g (${fats}%)`;
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <div class="profile-header">
+                <div class="profile-avatar">${member.sex === "male" ? "💪" : member.sex === "female" ? "🏃‍♀️" : "🌟"}</div>
+                <div class="profile-info">
+                    <h4>${member.name}</h4>
+                    <p>${member.age}${sexDisplay.charAt(0)} • ${member.height_cm}cm • ${member.weight_kg}kg</p>
+                    <p style="color: var(--color-text-light); font-size: 11px; margin-top: 4px;">${allergiesText}</p>
+                </div>
+            </div>
 
-        document.getElementById("stef-protein-bar").style.width = `${protein}%`;
-        document.getElementById("stef-protein-bar").textContent = `${protein}%`;
-        document.getElementById("stef-carbs-bar").style.width = `${carbs}%`;
-        document.getElementById("stef-carbs-bar").textContent = `${carbs}%`;
-        document.getElementById("stef-fats-bar").style.width = `${fats}%`;
-        document.getElementById("stef-fats-bar").textContent = `${fats}%`;
-    }
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">${calories.toLocaleString()}</div>
+                    <div class="stat-label">Calories</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${Math.round(protein_g)}g</div>
+                    <div class="stat-label">Protein</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${Math.round(carbs_g)}g</div>
+                    <div class="stat-label">Carbs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${Math.round(fat_g)}g</div>
+                    <div class="stat-label">Fats</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 20px;">Daily Macro Target</h3>
+
+            <div class="macro-bar">
+                <div class="macro-label">
+                    <span>Protein: ${Math.round(protein_g)}g (${proteinPct}%)</span>
+                    <span>Protein</span>
+                </div>
+                <div class="macro-progress">
+                    <div class="macro-fill protein-fill" style="width: ${proteinPct}%;">${proteinPct}%</div>
+                </div>
+            </div>
+
+            <div class="macro-bar">
+                <div class="macro-label">
+                    <span>Carbs: ${Math.round(carbs_g)}g (${carbsPct}%)</span>
+                    <span>Carbs</span>
+                </div>
+                <div class="macro-progress">
+                    <div class="macro-fill carb-fill" style="width: ${carbsPct}%;">${carbsPct}%</div>
+                </div>
+            </div>
+
+            <div class="macro-bar">
+                <div class="macro-label">
+                    <span>Fats: ${Math.round(fat_g)}g (${fatPct}%)</span>
+                    <span>Fats</span>
+                </div>
+                <div class="macro-progress">
+                    <div class="macro-fill fat-fill" style="width: ${fatPct}%;">${fatPct}%</div>
+                </div>
+            </div>
+        `;
+        profileGrid.appendChild(card);
+    });
 }
 
 // =========================
@@ -796,6 +822,7 @@ function populateMealPlans() {
         } else {
             if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
+            // TODO: Task 3 - Portions references left for next task
             if (fabianPortion && recipe.fabiansPortion) {
                 fabianPortion.innerHTML = `<strong>👤 Fabian:</strong> ${recipe.fabiansPortion.quantity}`;
             }
@@ -859,6 +886,7 @@ function populateRecipesTab() {
 
         if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
+        // TODO: Task 3 - Portions references left for next task
         if (fabianPortion && recipe.fabiansPortion) {
             fabianPortion.innerHTML = `<strong>👤 Fabian:</strong> ${recipe.fabiansPortion.quantity}`;
         }
@@ -1360,6 +1388,457 @@ async function clearWeeklyStaples() {
 }
 
 // =========================
+// Onboarding and Settings Overlays
+// =========================
+
+function hideOnboardingOverlay() {
+    const el = document.getElementById("onboardingOverlay");
+    if (el) el.remove();
+}
+
+function showOnboardingOverlay() {
+    if (document.getElementById("onboardingOverlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "onboardingOverlay";
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(18, 18, 24, 0.85);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #fff;
+    `;
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.cssText = `
+        width: 100%;
+        max-width: 650px;
+        padding: 35px;
+        background: rgba(33, 40, 50, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        color: #fff;
+        max-height: 90vh;
+        overflow-y: auto;
+    `;
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    let currentStep = 1;
+    let memberCount = 1;
+    let membersData = [];
+
+    function renderStep() {
+        card.innerHTML = "";
+
+        if (currentStep === 1) {
+            card.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <span style="font-size: 45px;">🏡</span>
+                    <h2 style="margin-top: 15px; font-weight: 700; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border: none;">Set Up Your Household</h2>
+                    <p style="color: rgba(255,255,255,0.7); margin-top: 5px; font-size: 14px;">Welcome! Let's get started by defining your household size.</p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.6); margin-bottom: 10px;">How many people are in your household?</label>
+                    <input type="number" id="memberCountInput" min="1" max="8" value="${memberCount}" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 16px; outline: none;" />
+                    <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 6px;">You can set up custom macro goals and preferences for up to 8 members.</p>
+                </div>
+
+                <button id="step1NextBtn" class="btn-primary" style="width: 100%; padding: 14px; font-size: 16px;">Next: Member Details →</button>
+            `;
+
+            document.getElementById("step1NextBtn").onclick = () => {
+                const val = parseInt(document.getElementById("memberCountInput").value);
+                if (isNaN(val) || val < 1 || val > 8) {
+                    alert("Please enter a valid number of members between 1 and 8.");
+                    return;
+                }
+                memberCount = val;
+                currentStep = 2;
+                renderStep();
+            };
+        } 
+        else if (currentStep === 2) {
+            let memberCardsHtml = "";
+            for (let i = 0; i < memberCount; i++) {
+                const prev = membersData[i] || { name: i === 0 ? "You" : `Member ${i + 1}`, age: 25, sex: "male", weight_kg: 70, height_cm: 170, allergies: [] };
+                memberCardsHtml += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #10b981; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">👤 Person ${i + 1}</h4>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Name</label>
+                                <input type="text" class="member-name" data-index="${i}" required value="${prev.name}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Age</label>
+                                <input type="number" class="member-age" data-index="${i}" required min="1" max="120" value="${prev.age}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Sex</label>
+                                <select class="member-sex" data-index="${i}" style="width: 100%; padding: 10px; background: rgba(30,40,50,0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 14px;">
+                                    <option value="male" ${prev.sex === "male" ? "selected" : ""}>Male</option>
+                                    <option value="female" ${prev.sex === "female" ? "selected" : ""}>Female</option>
+                                    <option value="other" ${prev.sex === "other" ? "selected" : ""}>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Weight (kg)</label>
+                                <input type="number" class="member-weight" data-index="${i}" required min="10" max="300" step="0.1" value="${prev.weight_kg}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Height (cm)</label>
+                                <input type="number" class="member-height" data-index="${i}" required min="50" max="250" value="${prev.height_cm}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Allergies</label>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px;">
+                                ${["gluten", "dairy", "nuts", "eggs", "soy", "shellfish", "fish"].map(allergy => {
+                                    const checked = prev.allergies.includes(allergy) ? "checked" : "";
+                                    return `
+                                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                            <input type="checkbox" class="member-allergy" data-index="${i}" value="${allergy}" ${checked} style="width:14px; height:14px; margin: 0;" />
+                                            ${allergy}
+                                        </label>
+                                    `;
+                                }).join("")}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <h3 style="margin-top: 0; margin-bottom: 10px; font-weight: 600; color: #3b82f6;">Step 2: Household Members Details</h3>
+                <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 20px;">Provide basic biometrics so we can calculate initial macro guidelines.</p>
+                
+                <form id="step2Form">
+                    <div style="max-height: 48vh; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
+                        ${memberCardsHtml}
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button type="button" id="step2BackBtn" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 15px;">← Back</button>
+                        <button type="submit" class="btn-primary" style="flex: 2; padding: 12px; font-size: 15px;">Calculate Macro Targets →</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById("step2BackBtn").onclick = () => {
+                currentStep = 1;
+                renderStep();
+            };
+
+            document.getElementById("step2Form").onsubmit = (e) => {
+                e.preventDefault();
+                membersData = [];
+
+                const names = Array.from(card.querySelectorAll(".member-name")).map(el => el.value.trim());
+                const ages = Array.from(card.querySelectorAll(".member-age")).map(el => parseInt(el.value));
+                const sexes = Array.from(card.querySelectorAll(".member-sex")).map(el => el.value);
+                const weights = Array.from(card.querySelectorAll(".member-weight")).map(el => parseFloat(el.value));
+                const heights = Array.from(card.querySelectorAll(".member-height")).map(el => parseFloat(el.value));
+
+                for (let i = 0; i < memberCount; i++) {
+                    if (!names[i]) {
+                        alert(`Please enter a name for Person ${i + 1}`);
+                        return;
+                    }
+
+                    // Extract checked allergies
+                    const allergyChecks = card.querySelectorAll(`.member-allergy[data-index="${i}"]:checked`);
+                    const allergies = Array.from(allergyChecks).map(el => el.value);
+
+                    // MIFFLIN-ST JEOR PRE-CALCULATIONS
+                    const weight = weights[i];
+                    const height = heights[i];
+                    const age = ages[i];
+                    const sex = sexes[i];
+
+                    const bmr = (10 * weight) + (6.25 * height) - (5 * age) + (sex === "male" ? 5 : sex === "female" ? -161 : -78);
+                    const calories = Math.round(bmr * 1.375); // active baseline multiplier
+                    const protein = Math.round((calories * 0.30) / 4);
+                    const carbs = Math.round((calories * 0.40) / 4);
+                    const fat = Math.round((calories * 0.30) / 9);
+
+                    membersData.push({
+                        name: names[i],
+                        age: age,
+                        sex: sex,
+                        weight_kg: weight,
+                        height_cm: height,
+                        allergies: allergies,
+                        macro_goals: {
+                            calories: calories,
+                            protein_g: protein,
+                            carbs_g: carbs,
+                            fat_g: fat
+                        }
+                    });
+                }
+
+                currentStep = 3;
+                renderStep();
+            };
+        } 
+        else if (currentStep === 3) {
+            let memberMacrosHtml = "";
+            membersData.forEach((m, i) => {
+                memberMacrosHtml += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #3b82f6; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">📊 Target Macros for ${m.name}</h4>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Daily Calories (kcal)</label>
+                                <input type="number" class="macro-calories" data-index="${i}" required min="500" max="10000" value="${m.macro_goals.calories}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Protein (g)</label>
+                                <input type="number" class="macro-protein" data-index="${i}" required min="10" max="500" value="${m.macro_goals.protein_g}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Carbohydrates (g)</label>
+                                <input type="number" class="macro-carbs" data-index="${i}" required min="10" max="1000" value="${m.macro_goals.carbs_g}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 6px;">Fats (g)</label>
+                                <input type="number" class="macro-fats" data-index="${i}" required min="5" max="300" value="${m.macro_goals.fat_g}" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 14px;" />
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <h3 style="margin-top: 0; margin-bottom: 10px; font-weight: 600; color: #10b981;">Step 3: Review & Customise Macro Targets</h3>
+                <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 20px;">We pre-filled target fields with Mifflin-St Jeor estimates. Adjust them as you wish.</p>
+                
+                <form id="step3Form">
+                    <div style="max-height: 48vh; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
+                        ${memberMacrosHtml}
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button type="button" id="step3BackBtn" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 15px;">← Back</button>
+                        <button type="submit" id="onboardingSubmitBtn" class="btn-success" style="flex: 2; padding: 12px; font-size: 15px; font-weight: 700;">Complete Setup & Start Planning! 🎉</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById("step3BackBtn").onclick = () => {
+                currentStep = 2;
+                renderStep();
+            };
+
+            document.getElementById("step3Form").onsubmit = async (e) => {
+                e.preventDefault();
+                const submitBtn = document.getElementById("onboardingSubmitBtn");
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.7";
+
+                const caloriesVals = Array.from(card.querySelectorAll(".macro-calories")).map(el => parseInt(el.value));
+                const proteinVals = Array.from(card.querySelectorAll(".macro-protein")).map(el => parseFloat(el.value));
+                const carbsVals = Array.from(card.querySelectorAll(".macro-carbs")).map(el => parseFloat(el.value));
+                const fatVals = Array.from(card.querySelectorAll(".macro-fats")).map(el => parseFloat(el.value));
+
+                for (let i = 0; i < memberCount; i++) {
+                    membersData[i].macro_goals = {
+                        calories: caloriesVals[i],
+                        protein_g: proteinVals[i],
+                        carbs_g: carbsVals[i],
+                        fat_g: fatVals[i]
+                    };
+                }
+
+                try {
+                    await API.setupHousehold({ members: membersData });
+                    hideOnboardingOverlay();
+                    showToast("Household setup complete! Welcome to your Dashboard.", "success");
+                    await syncAllData();
+                } catch (err) {
+                    alert(`Failed to save household: ${err.message}`);
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = "1";
+                }
+            };
+        }
+    }
+
+    renderStep();
+}
+
+window.showSettingsModal = function() {
+    const modal = document.getElementById("settingsModal");
+    const container = document.getElementById("settingsContainer");
+    if (!modal || !container) return;
+
+    container.innerHTML = "";
+
+    if (!State.household || !State.household.members || State.household.members.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--color-text-light);">No household data found.</div>`;
+        modal.classList.add("active");
+        return;
+    }
+
+    State.household.members.forEach((member) => {
+        const { calories, protein_g, carbs_g, fat_g } = member.macro_goals || { calories: 2000, protein_g: 150, carbs_g: 200, fat_g: 65 };
+
+        const form = document.createElement("form");
+        form.style.cssText = `
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        `;
+
+        form.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--color-border); padding-bottom:8px; margin-bottom:5px;">
+                <h4 style="margin:0; color: var(--color-primary); font-size:16px;">👤 ${member.name}</h4>
+                <button type="submit" id="saveMemberBtn-${member.id}" class="btn-success" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">Save Changes</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Name</label>
+                    <input type="text" class="edit-name" required value="${member.name}" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Age</label>
+                    <input type="number" class="edit-age" required min="1" max="120" value="${member.age}" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Sex</label>
+                    <select class="edit-sex" style="padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); font-size: 14px; width: 100%;">
+                        <option value="male" ${member.sex === "male" ? "selected" : ""}>Male</option>
+                        <option value="female" ${member.sex === "female" ? "selected" : ""}>Female</option>
+                        <option value="other" ${member.sex === "other" ? "selected" : ""}>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Weight (kg)</label>
+                    <input type="number" class="edit-weight" required min="10" max="300" step="0.1" value="${member.weight_kg}" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Height (cm)</label>
+                    <input type="number" class="edit-height" required min="50" max="250" value="${member.height_cm}" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid var(--color-border); padding-top: 15px;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Daily Calories (kcal)</label>
+                    <input type="number" class="edit-calories" required min="500" max="10000" value="${calories}" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Protein (g)</label>
+                    <input type="number" class="edit-protein" required min="10" max="500" value="${protein_g}" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Carbs (g)</label>
+                    <input type="number" class="edit-carbs" required min="10" max="1000" value="${carbs_g}" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Fats (g)</label>
+                    <input type="number" class="edit-fats" required min="5" max="300" value="${fat_g}" />
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--color-border); padding-top: 15px;">
+                <label style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--color-text-light); margin-bottom: 6px;">Allergies</label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; color: var(--color-text);">
+                    ${["gluten", "dairy", "nuts", "eggs", "soy", "shellfish", "fish"].map(allergy => {
+                        const checked = member.allergies.includes(allergy) ? "checked" : "";
+                        return `
+                            <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="checkbox" class="edit-allergy" value="${allergy}" ${checked} style="width:14px; height:14px; margin: 0;" />
+                                ${allergy}
+                            </label>
+                        `;
+                    }).join("")}
+                </div>
+            </div>
+        `;
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById(`saveMemberBtn-${member.id}`);
+            btn.disabled = true;
+            btn.textContent = "Saving...";
+
+            const payload = {
+                name: form.querySelector(".edit-name").value.trim(),
+                age: parseInt(form.querySelector(".edit-age").value),
+                sex: form.querySelector(".edit-sex").value,
+                weight_kg: parseFloat(form.querySelector(".edit-weight").value),
+                height_cm: parseFloat(form.querySelector(".edit-height").value),
+                macro_goals: {
+                    calories: parseInt(form.querySelector(".edit-calories").value),
+                    protein_g: parseFloat(form.querySelector(".edit-protein").value),
+                    carbs_g: parseFloat(form.querySelector(".edit-carbs").value),
+                    fat_g: parseFloat(form.querySelector(".edit-fats").value)
+                },
+                allergies: Array.from(form.querySelectorAll(".edit-allergy:checked")).map(el => el.value)
+            };
+
+            try {
+                await API.updateHouseholdMember(member.id, payload);
+                showToast(`Saved changes for ${payload.name}!`, "success");
+                btn.disabled = false;
+                btn.textContent = "Save Changes";
+                await syncAllData();
+            } catch (err) {
+                alert(`Failed to save member updates: ${err.message}`);
+                btn.disabled = false;
+                btn.textContent = "Save Changes";
+            }
+        };
+
+        container.appendChild(form);
+    });
+
+    modal.classList.add("active");
+};
+
+window.closeSettingsModal = function() {
+    const modal = document.getElementById("settingsModal");
+    if (modal) modal.classList.remove("active");
+};
+
+// Close modal when clicking outside
+document.addEventListener("click", function (e) {
+    const modal = document.getElementById("settingsModal");
+    if (modal && e.target === modal) closeSettingsModal();
+});
+
+// =========================
 // 9. SYNCHRONISATION & INITIALISATION
 // =========================
 
@@ -1383,12 +1862,16 @@ async function syncAllData() {
         if (logoutBtn) logoutBtn.style.display = "block";
 
         // 2. Fetch all data in parallel
-        const [plan, inventoryList, staplesList, recipesList, checkedList] = await Promise.all([
+        const [plan, inventoryList, staplesList, recipesList, checkedList, householdRes] = await Promise.all([
             API.getWeeklyPlan(State.weeklyPlan.weekLabel),
             API.getInventory(),
             API.getStaples(),
             API.getRecipes(),
-            API.getShoppingChecks(State.weeklyPlan.weekLabel)
+            API.getShoppingChecks(State.weeklyPlan.weekLabel),
+            API.getHousehold().catch(err => {
+                console.log("No household setup yet:", err);
+                return null;
+            })
         ]);
 
         if (recipesList && recipesList.length > 0) {
@@ -1404,6 +1887,22 @@ async function syncAllData() {
             acc[c.item_key] = c.is_checked === 1;
             return acc;
         }, {});
+        State.household = householdRes;
+
+        // Toggle Settings button in header
+        const settingsBtn = document.getElementById("settingsBtn");
+        if (settingsBtn) {
+            settingsBtn.style.display = State.household ? "block" : "none";
+        }
+
+        // Onboarding Check: If authenticated but no household, enforce onboarding overlay
+        if (!State.household || !State.household.members || State.household.members.length === 0) {
+            showOnboardingOverlay();
+            isSyncing = false;
+            return;
+        } else {
+            hideOnboardingOverlay();
+        }
 
         // 3. Render all UI modules using new server data
         State.renderAll();

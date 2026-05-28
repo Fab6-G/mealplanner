@@ -135,6 +135,25 @@ const API = {
     });
   },
 
+  // Household & Member Methods
+  async getHousehold() {
+    return this.request("/api/household");
+  },
+
+  async setupHousehold(data) {
+    return this.request("/api/household/setup", {
+      method: "POST",
+      body: data
+    });
+  },
+
+  async updateHouseholdMember(id, memberData) {
+    return this.request(`/api/household/member/${id}`, {
+      method: "PUT",
+      body: memberData
+    });
+  },
+
   // Dynamically inject a beautiful glassmorphic login overlay
   showLoginOverlay() {
     if (document.getElementById("authOverlay")) return;
