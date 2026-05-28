@@ -544,7 +544,8 @@ document.addEventListener("change", async function (e) {
             const itemKey = e.target.getAttribute("data-item-key");
             if (itemKey) {
                 const isChecked = e.target.checked;
-                await API.saveShoppingCheck(weeklyPlan.weekLabel, itemKey, isChecked).catch(console.error);
+                State.shoppingChecks[itemKey] = isChecked;
+                await API.saveShoppingCheck(State.weeklyPlan.weekLabel, itemKey, isChecked).catch(console.error);
             }
         }
     }

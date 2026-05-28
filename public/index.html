@@ -187,36 +187,36 @@
                 <h2>Weekly Meal Plans</h2>
                 <p style="color: var(--color-text-light); margin-bottom: 20px;">Week of Feb 3–9, 2026 • Customized for both fitness goals • Full 7-day plan</p>
 
-                <div class="grid">
-                    <template id="day-template">
-                        <div>
-                            <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;"></h3>
+                <template id="day-template">
+                    <div>
+                        <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;"></h3>
 
-                            <div class="meal-item shared-dinner">
-                                <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
-                                <div class="meal-time">Dinner</div>
-                                <div class="meal-name"></div>
+                        <div class="meal-item shared-dinner">
+                            <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                            <div class="meal-time">Dinner</div>
+                            <div class="meal-name"></div>
 
-                                <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
-                                    <div class="fabian-portion"></div>
-                                    <div class="stef-portion"></div>
-                                </div>
-
-                                <div class="meal-macros" style="margin-top: 8px;">
-                                    <div style="font-size: 11px; color: var(--color-text-light);">
-                                        <strong>Cooking time:</strong>
-                                        <span class="recipe-time"></span>
-                                    </div>
-                                </div>
-                                <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
-                                    📖 View Full Recipe & Instructions
-                                </button>
-                                <button class="btn-secondary remove-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);">
-                                    🗑 Remove from Plan
-                                </button>
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
+                                <div class="fabian-portion"></div>
+                                <div class="stef-portion"></div>
                             </div>
+
+                            <div class="meal-macros" style="margin-top: 8px;">
+                                <div style="font-size: 11px; color: var(--color-text-light);">
+                                    <strong>Cooking time:</strong>
+                                    <span class="recipe-time"></span>
+                                </div>
+                            </div>
+                            <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                📖 View Full Recipe & Instructions
+                            </button>
+                            <button class="btn-secondary remove-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);">
+                                🗑 Remove from Plan
+                            </button>
                         </div>
-                    </template>
+                    </div>
+                </template>
+                <div class="grid">
                 </div>
 
                 <div class="buttons" style="margin-top: 20px;">
@@ -409,37 +409,37 @@
 
                 <h3 style="margin-top: 20px; margin-bottom: 15px;">Your Recipes</h3>
 
-                <div class="grid">
-                    <template id="recipe-template">
-                        <div>
-                            <div class="meal-item shared-dinner">
-                                <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
-                                <div class="meal-time">Dinner</div>
-                                <div class="meal-name"></div>
+                <template id="recipe-template">
+                    <div>
+                        <div class="meal-item shared-dinner">
+                            <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                            <div class="meal-time">Dinner</div>
+                            <div class="meal-name"></div>
 
-                                <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
-                                    <div class="fabian-portion"></div>
-                                    <div class="stef-portion"></div>
-                                </div>
-
-                                <div class="meal-macros" style="margin-top: 8px;">
-                                    <div style="font-size: 11px; color: var(--color-text-light);">
-                                        <strong>Cooking time:</strong>
-                                        <span class="recipe-time"></span>
-                                    </div>
-                                </div>
-                                <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
-                                    📖 View Full Recipe & Instructions
-                                </button>
-                                <button
-                                        class="btn-secondary add-to-plan"
-                                        onclick="addRecipeToPlanFromButton(this)"
-                                        style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
-                                    ➕ Add to Meal Plan
-                                </button>
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--color-text-light); display: flex; gap: 15px; flex-wrap: wrap;">
+                                <div class="fabian-portion"></div>
+                                <div class="stef-portion"></div>
                             </div>
+
+                            <div class="meal-macros" style="margin-top: 8px;">
+                                <div style="font-size: 11px; color: var(--color-text-light);">
+                                    <strong>Cooking time:</strong>
+                                    <span class="recipe-time"></span>
+                                </div>
+                            </div>
+                            <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                📖 View Full Recipe & Instructions
+                            </button>
+                            <button
+                                    class="btn-secondary add-to-plan"
+                                    onclick="addRecipeToPlanFromButton(this)"
+                                    style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                ➕ Add to Meal Plan
+                            </button>
                         </div>
-                    </template>
+                    </div>
+                </template>
+                <div class="grid">
                 </div>
         </div>
     </div>
