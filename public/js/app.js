@@ -75,6 +75,7 @@ const State = {
     staples: [],
     shoppingChecks: {},
     household: null,
+    favourites: [],
 
     renderAll() {
         renderProfiles();
@@ -89,6 +90,7 @@ const State = {
 };
 
 let cachedWeeklyPlan = null;
+let favouritesOnlyFilter = false;
 
 function loadWeeklyPlan() {
     return State.weeklyPlan;
@@ -941,6 +943,42 @@ function populateMealPlans() {
     });
 }
 
+function showCardInlineError(card, message) {
+    if (!card) return;
+    let errEl = card.querySelector(".card-inline-error");
+    if (!errEl) {
+        errEl = document.createElement("div");
+        errEl.className = "card-inline-error";
+        card.appendChild(errEl);
+    }
+    errEl.textContent = message;
+    errEl.style.opacity = "1";
+    errEl.style.transform = "translateY(0)";
+    
+    setTimeout(() => {
+        errEl.style.opacity = "0";
+        errEl.style.transform = "translateY(10px)";
+        setTimeout(() => errEl.remove(), 300);
+    }, 3000);
+}
+
+window.toggleFavouritesFilter = function() {
+    favouritesOnlyFilter = !favouritesOnlyFilter;
+    const btn = document.getElementById("favouritesFilterBtn");
+    if (btn) {
+        if (favouritesOnlyFilter) {
+            btn.innerHTML = "🍔 Show All";
+            btn.classList.add("btn-primary");
+            btn.classList.remove("btn-secondary");
+        } else {
+            btn.innerHTML = "⭐ Show Favourites";
+            btn.classList.add("btn-secondary");
+            btn.classList.remove("btn-primary");
+        }
+    }
+    populateRecipesTab();
+};
+
 function populateRecipesTab() {
     const recipesTab = document.getElementById("recipes");
     if (!recipesTab) return;
@@ -958,7 +996,23 @@ function populateRecipesTab() {
         });
     }
 
-    recipeBank.forEach(recipe => {
+    let filteredRecipes = recipeBank;
+    if (favouritesOnlyFilter) {
+        filteredRecipes = recipeBank.filter(r => State.favourites.includes(r.id));
+    }
+
+    if (favouritesOnlyFilter && filteredRecipes.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state-favourites" style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--color-text-light);">
+                <div style="font-size: 48px; margin-bottom: 12px;">⭐</div>
+                <h4 style="margin-bottom: 8px; color: var(--color-text);">You haven't starred any recipes yet</h4>
+                <p style="font-size: 13px; max-width: 320px; margin: 0 auto; line-height: 1.5;">Click the star icon (☆) on any recipe to add it to your favourites so you can find it easily later!</p>
+            </div>
+        `;
+        return;
+    }
+
+    filteredRecipes.forEach(recipe => {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector(".meal-item");
         if (card) {
@@ -971,6 +1025,7 @@ function populateRecipesTab() {
         const timeSpan = clone.querySelector(".recipe-time");
         const viewRecipeBtn = clone.querySelector(".view-recipe");
         const addToPlanBtn = clone.querySelector(".add-to-plan");
+        const favouriteBtn = clone.querySelector(".favourite-btn");
 
         if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
@@ -987,6 +1042,59 @@ function populateRecipesTab() {
 
         if (viewRecipeBtn) {
             viewRecipeBtn.onclick = () => showRecipeModal(recipe);
+        }
+
+        const isFavourited = State.favourites.includes(recipe.id);
+        if (favouriteBtn) {
+            favouriteBtn.textContent = isFavourited ? "⭐" : "☆";
+            favouriteBtn.setAttribute("aria-label", isFavourited ? "Remove from favourites" : "Add to favourites");
+            if (isFavourited) {
+                favouriteBtn.classList.add("favourited");
+            } else {
+                favouriteBtn.classList.remove("favourited");
+            }
+
+            favouriteBtn.onclick = async (e) => {
+                e.stopPropagation();
+                
+                const cardEl = favouriteBtn.closest(".meal-item");
+                const currentFavourited = State.favourites.includes(recipe.id);
+                
+                // Optimistic UI updates
+                if (currentFavourited) {
+                    State.favourites = State.favourites.filter(id => id !== recipe.id);
+                    favouriteBtn.textContent = "☆";
+                    favouriteBtn.setAttribute("aria-label", "Add to favourites");
+                    favouriteBtn.classList.remove("favourited");
+                } else {
+                    State.favourites.push(recipe.id);
+                    favouriteBtn.textContent = "⭐";
+                    favouriteBtn.setAttribute("aria-label", "Remove from favourites");
+                    favouriteBtn.classList.add("favourited");
+                }
+
+                // If favourites-only filter is active, immediately re-render to avoid lag
+                if (favouritesOnlyFilter) {
+                    populateRecipesTab();
+                }
+
+                try {
+                    if (currentFavourited) {
+                        await API.removeFavourite(recipe.id);
+                    } else {
+                        await API.addFavourite(recipe.id);
+                    }
+                } catch (err) {
+                    // Rollback on failure
+                    if (currentFavourited) {
+                        State.favourites.push(recipe.id);
+                    } else {
+                        State.favourites = State.favourites.filter(id => id !== recipe.id);
+                    }
+                    populateRecipesTab();
+                    showCardInlineError(cardEl, "Failed to save favourite");
+                }
+            };
         }
 
         const usedDay = usageById[recipe.id];
@@ -1009,8 +1117,6 @@ function populateRecipesTab() {
             } else {
                 addToPlanBtn.textContent = "➕ Add to Meal Plan";
                 addToPlanBtn.disabled = false;
-
-                // KEY CHANGE: pass the button into the wrapper
                 addToPlanBtn.onclick = (e) => addRecipeToPlanFromButton(e.currentTarget);
             }
         }
@@ -1955,7 +2061,7 @@ async function syncAllData() {
         if (logoutBtn) logoutBtn.style.display = "block";
 
         // 2. Fetch all data in parallel
-        const [plan, inventoryList, staplesList, recipesList, checkedList, householdRes] = await Promise.all([
+        const [plan, inventoryList, staplesList, recipesList, checkedList, householdRes, favouritesList] = await Promise.all([
             API.getWeeklyPlan(State.weeklyPlan.weekLabel),
             API.getInventory(),
             API.getStaples(),
@@ -1964,6 +2070,10 @@ async function syncAllData() {
             API.getHousehold().catch(err => {
                 console.log("No household setup yet:", err);
                 return null;
+            }),
+            API.getFavourites().catch(err => {
+                console.log("No favourites setup yet:", err);
+                return [];
             })
         ]);
 
@@ -1981,6 +2091,7 @@ async function syncAllData() {
             return acc;
         }, {});
         State.household = householdRes;
+        State.favourites = favouritesList || [];
 
         // Toggle Settings button in header
         const settingsBtn = document.getElementById("settingsBtn");

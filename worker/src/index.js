@@ -340,6 +340,40 @@ export default {
 
       const userId = user.user_id;
 
+      // ==========================================
+      // Favourites Endpoints
+      // ==========================================
+      if (path === "/api/favourites") {
+        if (method === "GET") {
+          const res = await db.prepare("SELECT recipe_id FROM recipe_favourites WHERE user_id = ?")
+            .bind(userId)
+            .all();
+          const list = res.results.map(r => r.recipe_id);
+          return new Response(JSON.stringify(list), { status: 200, headers: corsHeaders });
+        }
+      }
+
+      if (path.startsWith("/api/favourites/")) {
+        const recipeId = path.split("/").pop();
+        if (!recipeId) {
+          return new Response(JSON.stringify({ error: "Recipe ID required." }), { status: 400, headers: corsHeaders });
+        }
+
+        if (method === "POST") {
+          await db.prepare(
+            "INSERT OR IGNORE INTO recipe_favourites (user_id, recipe_id) VALUES (?, ?)"
+          ).bind(userId, recipeId).run();
+          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+        }
+
+        if (method === "DELETE") {
+          await db.prepare(
+            "DELETE FROM recipe_favourites WHERE user_id = ? AND recipe_id = ?"
+          ).bind(userId, recipeId).run();
+          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+        }
+      }
+
       // 1. Recipes CRUD
       if (path === "/api/recipes") {
         if (method === "GET") {

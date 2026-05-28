@@ -79,6 +79,23 @@ const API = {
     return this.request(`/api/recipes/${recipeId}/portions`);
   },
 
+  // Favourites CRUD
+  async getFavourites() {
+    return this.request("/api/favourites");
+  },
+
+  async addFavourite(recipeId) {
+    return this.request(`/api/favourites/${recipeId}`, {
+      method: "POST"
+    });
+  },
+
+  async removeFavourite(recipeId) {
+    return this.request(`/api/favourites/${recipeId}`, {
+      method: "DELETE"
+    });
+  },
+
   // Weekly Plan CRUD
   async getWeeklyPlan(weekLabel) {
     return this.request(`/api/weekly-plan?week_label=${encodeURIComponent(weekLabel)}`);

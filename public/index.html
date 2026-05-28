@@ -71,7 +71,7 @@
                         <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;"></h3>
 
                         <div class="meal-item shared-dinner">
-                            <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                            <div class="plan-badge" style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
                             <div class="meal-time">Dinner</div>
                             <div class="meal-name"></div>
 
@@ -279,7 +279,7 @@
 
                 <div class="buttons" style="margin-bottom: 20px;">
                     <button class="btn-primary" onclick="alert('Generating new recipes using your macros...')">🔄 Generate New Recipes</button>
-                    <button class="btn-secondary">⭐ View Favorites</button>
+                    <button id="favouritesFilterBtn" class="btn-secondary" onclick="toggleFavouritesFilter()">⭐ Show Favourites</button>
                     <button class="btn-secondary">🔗 Share Recipe</button>
                 </div>
 
@@ -288,7 +288,8 @@
                 <template id="recipe-template">
                     <div>
                         <div class="meal-item shared-dinner">
-                            <div style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                            <button class="favourite-btn" aria-label="Add to favourites">☆</button>
+                            <div class="plan-badge" style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
                             <div class="meal-time">Dinner</div>
                             <div class="meal-name"></div>
 
