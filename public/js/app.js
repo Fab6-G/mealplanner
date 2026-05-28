@@ -699,18 +699,73 @@ function renderDashboardOverview() {
     const totalIngredientsCount = combinedIngredients.length + weeklyStaplesCount;
     const estimatedCost = totalIngredientsCount * 3.50;
 
+    const members = State.household ? State.household.members : [];
+    const numMembers = members.length > 0 ? members.length : 1;
+
     const mealsCountEl = document.getElementById("dashboard-meals-count");
     const ingredientsCountEl = document.getElementById("dashboard-ingredients-count");
     const costEl = document.getElementById("dashboard-cost");
     const prepDaysEl = document.getElementById("dashboard-prep-days");
 
-    if (mealsCountEl) mealsCountEl.textContent = `${plannedDinnersCount * 2}`; // 2 people
+    if (mealsCountEl) mealsCountEl.textContent = `${plannedDinnersCount * numMembers}`;
     if (ingredientsCountEl) ingredientsCountEl.textContent = `${totalIngredientsCount}`;
     if (costEl) costEl.textContent = `~£${estimatedCost.toFixed(0)}`;
     
     const uniqueRecipesCount = new Set(State.weeklyPlan.days.map(d => d.recipeId).filter(Boolean)).size;
     if (prepDaysEl) {
         prepDaysEl.textContent = uniqueRecipesCount > 0 ? `${Math.max(1, Math.min(2, uniqueRecipesCount))}` : "0";
+    }
+
+    // Render dynamic Household Target summary card
+    const dashboard = document.getElementById("dashboard");
+    if (dashboard && members.length > 0) {
+        let targetSummaryCard = document.getElementById("dashboard-household-target-card");
+        if (!targetSummaryCard) {
+            targetSummaryCard = document.createElement("div");
+            targetSummaryCard.id = "dashboard-household-target-card";
+            targetSummaryCard.className = "card";
+            targetSummaryCard.style.marginTop = "20px";
+            dashboard.appendChild(targetSummaryCard);
+        }
+
+        let totalCals = 0;
+        let totalProt = 0;
+        let totalCarb = 0;
+        let totalFat = 0;
+
+        members.forEach(m => {
+            const { calories, protein_g, carbs_g, fat_g } = m.macro_goals || { calories: 2000, protein_g: 150, carbs_g: 200, fat_g: 65 };
+            totalCals += calories;
+            totalProt += protein_g;
+            totalCarb += carbs_g;
+            totalFat += fat_g;
+        });
+
+        targetSummaryCard.innerHTML = `
+            <h3>🏡 Household Daily Targets (Consolidated)</h3>
+            <p style="color: var(--color-text-light); margin-bottom: 15px; font-size: 13px;">Combined target macros across all ${members.length} household members.</p>
+            <div class="stats" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+                <div class="stat" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15);">
+                     <div class="stat-value" style="color: var(--color-success); font-size: 22px;">${totalCals.toLocaleString()}</div>
+                     <div class="stat-label">Total Calories</div>
+                </div>
+                <div class="stat" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15);">
+                     <div class="stat-value" style="color: var(--color-primary); font-size: 22px;">${Math.round(totalProt)}g</div>
+                     <div class="stat-label">Protein</div>
+                </div>
+                <div class="stat" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
+                     <div class="stat-value" style="color: var(--color-warning); font-size: 22px;">${Math.round(totalCarb)}g</div>
+                     <div class="stat-label">Carbs</div>
+                </div>
+                <div class="stat" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15);">
+                     <div class="stat-value" style="color: var(--color-danger); font-size: 22px;">${Math.round(totalFat)}g</div>
+                     <div class="stat-label">Fats</div>
+                </div>
+            </div>
+        `;
+    } else if (dashboard) {
+        const targetSummaryCard = document.getElementById("dashboard-household-target-card");
+        if (targetSummaryCard) targetSummaryCard.remove();
     }
 }
 
@@ -788,6 +843,46 @@ async function addShoppingListToInventory() {
 // 6. WEEKLY PLAN: UI + ADD FROM RECIPE BANK
 // =========================
 
+function renderRecipePortions(container, recipe) {
+    if (!container) return;
+    container.innerHTML = "";
+
+    const members = State.household ? State.household.members : [];
+    if (members.length === 0) {
+        container.innerHTML = `<span style="color: var(--color-text-light); font-size: 11px; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; display: inline-block;">Set up your household in Settings to see portions</span>`;
+        return;
+    }
+
+    const baseMacros = recipe.macros || { calories: 800, protein_g: 70, carbs_g: 80, fat_g: 25 };
+    const splits = calculateProportionalSplit(baseMacros, members);
+
+    splits.forEach(split => {
+        const card = document.createElement("div");
+        card.className = "portion-card";
+        card.style.cssText = `
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 110px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        `;
+
+        const labelText = members.length > 1 ? `<strong>👤 ${split.name}:</strong> ` : "";
+        card.innerHTML = `
+            <div>${labelText}${split.macros.calories} kcal</div>
+            <div style="color: rgba(255,255,255,0.6); font-size: 10px; white-space: nowrap;">
+                ${split.macros.protein_g}g P • ${split.macros.carbs_g}g C • ${split.macros.fat_g}g F
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
 function populateMealPlans() {
     const tab = document.getElementById("meals");
     if (!tab) return;
@@ -806,28 +901,22 @@ function populateMealPlans() {
         if (dayHeading) dayHeading.textContent = entry.day;
 
         const mealName = clone.querySelector(".meal-name");
-        const fabianPortion = clone.querySelector(".fabian-portion");
-        const stefPortion = clone.querySelector(".stef-portion");
+        const portionsContainer = clone.querySelector(".portions-container");
         const timeSpan = clone.querySelector(".recipe-time");
         const viewRecipeBtn = clone.querySelector(".view-recipe");
         const removeBtn = clone.querySelector(".remove-recipe");
 
         if (!recipe) {
             if (mealName) mealName.textContent = "No recipe selected";
-            if (fabianPortion) fabianPortion.textContent = "";
-            if (stefPortion) stefPortion.textContent = "";
+            if (portionsContainer) portionsContainer.innerHTML = "";
             if (timeSpan) timeSpan.textContent = "N/A";
             if (viewRecipeBtn) viewRecipeBtn.disabled = true;
             if (removeBtn) removeBtn.style.display = "none";
         } else {
             if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
-            // TODO: Task 3 - Portions references left for next task
-            if (fabianPortion && recipe.fabiansPortion) {
-                fabianPortion.innerHTML = `<strong>👤 Fabian:</strong> ${recipe.fabiansPortion.quantity}`;
-            }
-            if (stefPortion && recipe.stefaniesPortion) {
-                stefPortion.innerHTML = `<strong>👩 Stefanie:</strong> ${recipe.stefaniesPortion.quantity}`;
+            if (portionsContainer) {
+                renderRecipePortions(portionsContainer, recipe);
             }
 
             if (timeSpan) {
@@ -878,20 +967,15 @@ function populateRecipesTab() {
 
         const badge = clone.querySelector(".plan-badge");
         const mealName = clone.querySelector(".meal-name");
-        const fabianPortion = clone.querySelector(".fabian-portion");
-        const stefPortion = clone.querySelector(".stef-portion");
+        const portionsContainer = clone.querySelector(".portions-container");
         const timeSpan = clone.querySelector(".recipe-time");
         const viewRecipeBtn = clone.querySelector(".view-recipe");
         const addToPlanBtn = clone.querySelector(".add-to-plan");
 
         if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
 
-        // TODO: Task 3 - Portions references left for next task
-        if (fabianPortion && recipe.fabiansPortion) {
-            fabianPortion.innerHTML = `<strong>👤 Fabian:</strong> ${recipe.fabiansPortion.quantity}`;
-        }
-        if (stefPortion && recipe.stefaniesPortion) {
-            stefPortion.innerHTML = `<strong>👩 Stefanie:</strong> ${recipe.stefaniesPortion.quantity}`;
+        if (portionsContainer) {
+            renderRecipePortions(portionsContainer, recipe);
         }
 
         if (timeSpan) {
@@ -1074,15 +1158,27 @@ function showRecipeModal(recipe) {
         .map((instruction, index) => `<li><strong>Step ${index + 1}:</strong> ${instruction}</li>`)
         .join("");
 
-    const fabiansPortionLines = Object.entries(recipe.fabiansPortion || {})
-        .filter(([key]) => key !== "quantity")
-        .map(([, val]) => `<li style="padding-left: 15px; padding-top: 4px;">• ${val}</li>`)
-        .join("");
+    const members = State.household ? State.household.members : [];
+    let portionsHtml = "";
 
-    const stefaniesPortionLines = Object.entries(recipe.stefaniesPortion || {})
-        .filter(([key]) => key !== "quantity")
-        .map(([, val]) => `<li style="padding-left: 15px; padding-top: 4px;">• ${val}</li>`)
-        .join("");
+    if (members.length === 0) {
+        portionsHtml = `<div style="color: var(--color-warning); font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">Set up your household in Settings to see portion targets.</div>`;
+    } else {
+        const baseMacros = recipe.macros || { calories: 800, protein_g: 70, carbs_g: 80, fat_g: 25 };
+        const splits = calculateProportionalSplit(baseMacros, members);
+        
+        portionsHtml = splits.map(split => {
+            const labelText = members.length > 1 ? `👤 ${split.name}: ` : "";
+            return `
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+                    <div style="font-weight: 600; font-size: 13px; color: var(--color-primary);">${labelText}${split.macros.calories} kcal</div>
+                    <div style="color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 4px;">
+                        Protein: <strong>${split.macros.protein_g}g</strong> • Carbs: <strong>${split.macros.carbs_g}g</strong> • Fats: <strong>${split.macros.fat_g}g</strong>
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
 
     const recipeContent = `
     <div class="recipe-modal-header">
@@ -1111,12 +1207,9 @@ function showRecipeModal(recipe) {
       </div>
       <div class="recipe-section">
         <h4>Portion Sizes</h4>
-        <ul>
-          <li><strong>👤 Fabian (${recipe.fabiansPortion?.quantity}):</strong></li>
-          ${fabiansPortionLines}
-          <li style="margin-top: 10px;"><strong>👩 Stefanie (${recipe.stefaniesPortion?.quantity}):</strong></li>
-          ${stefaniesPortionLines}
-        </ul>
+        <div style="margin-top: 8px;">
+          ${portionsHtml}
+        </div>
       </div>
     </div>
 

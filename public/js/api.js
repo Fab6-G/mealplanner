@@ -75,6 +75,10 @@ const API = {
     });
   },
 
+  async getRecipePortions(recipeId) {
+    return this.request(`/api/recipes/${recipeId}/portions`);
+  },
+
   // Weekly Plan CRUD
   async getWeeklyPlan(weekLabel) {
     return this.request(`/api/weekly-plan?week_label=${encodeURIComponent(weekLabel)}`);

@@ -10,17 +10,11 @@ export const defaultRecipes = [
     prep_time: "20 min",
     cook_time: "20 min",
     servings: 2,
-    fabians_portion: {
-      quantity: "Large bowl",
-      chicken: "220 g cooked chicken",
-      rice: "220 g cooked rice",
-      veg: "200 g mixed vegetables"
-    },
-    stefanies_portion: {
-      quantity: "Medium bowl",
-      chicken: "140 g cooked chicken",
-      rice: "140 g cooked rice",
-      veg: "200 g mixed vegetables"
+    macros: {
+      calories: 1200,
+      protein_g: 100,
+      carbs_g: 130,
+      fat_g: 25
     },
     ingredients: {
       produce: [
@@ -64,17 +58,11 @@ export const defaultRecipes = [
     prep_time: "20 min",
     cook_time: "25 min",
     servings: 2,
-    fabians_portion: {
-      quantity: "Hearty slice",
-      beef: "220 g cooked beef mince",
-      pasta: "130 g dry pasta (cooked)",
-      cheese: "20 g cheese"
-    },
-    stefanies_portion: {
-      quantity: "Moderate slice",
-      beef: "110 g cooked beef mince",
-      pasta: "70 g dry pasta (cooked)",
-      cheese: "15 g cheese"
+    macros: {
+      calories: 1400,
+      protein_g: 110,
+      carbs_g: 140,
+      fat_g: 35
     },
     ingredients: {
       produce: [
@@ -122,17 +110,11 @@ export const defaultRecipes = [
     prep_time: "15 min",
     cook_time: "25 min",
     servings: 2,
-    fabians_portion: {
-      quantity: "1.5 fillets + large portion",
-      salmon: "200 g raw salmon",
-      sweetPotato: "250 g",
-      greens: "150 g"
-    },
-    stefanies_portion: {
-      quantity: "1 fillet + moderate portion",
-      salmon: "130 g raw salmon",
-      sweetPotato: "150 g",
-      greens: "150 g"
+    macros: {
+      calories: 1300,
+      protein_g: 90,
+      carbs_g: 100,
+      fat_g: 50
     },
     ingredients: {
       produce: [
@@ -172,17 +154,11 @@ export const defaultRecipes = [
     prep_time: "15 min",
     cook_time: "25 min",
     servings: 2,
-    fabians_portion: {
-      quantity: "3 loaded wraps",
-      chicken: "220 g cooked chicken",
-      tortillas: "3 tortillas",
-      veg: "generous"
-    },
-    stefanies_portion: {
-      quantity: "2 moderate wraps",
-      chicken: "130 g cooked chicken",
-      tortillas: "2 tortillas",
-      veg: "generous"
+    macros: {
+      calories: 1300,
+      protein_g: 100,
+      carbs_g: 120,
+      fat_g: 30
     },
     ingredients: {
       produce: [

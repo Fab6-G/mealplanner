@@ -30,8 +30,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     ingredients TEXT NOT NULL, -- JSON stringified ingredients object
     instructions TEXT NOT NULL, -- JSON stringified array of instructions
     tips TEXT NOT NULL,
-    fabians_portion TEXT NOT NULL, -- JSON stringified portion details
-    stefanies_portion TEXT NOT NULL, -- JSON stringified portion details
+    macros TEXT NOT NULL, -- JSON stringified base macros (calories, protein_g, carbs_g, fat_g)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

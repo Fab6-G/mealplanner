@@ -80,7 +80,7 @@ async function seedRecipesIfEmpty(db) {
       for (const r of defaultRecipes) {
         statements.push(
           db.prepare(
-            "INSERT INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, fabians_portion, stefanies_portion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ).bind(
             r.id,
             r.name,
@@ -92,8 +92,7 @@ async function seedRecipesIfEmpty(db) {
             JSON.stringify(r.ingredients),
             JSON.stringify(r.instructions),
             r.tips,
-            JSON.stringify(r.fabians_portion),
-            JSON.stringify(r.stefanies_portion)
+            JSON.stringify(r.macros)
           )
         );
       }
@@ -134,6 +133,46 @@ async function seedStaplesIfEmpty(db, userId) {
   } catch (err) {
     console.error("Error seeding staples:", err);
   }
+}
+
+function calculateProportionalSplit(baseMacros, members) {
+  if (!members || members.length === 0) return [];
+
+  // Calculate total household calories
+  let totalCaloriesGoal = 0;
+  let hasAllCalorieGoals = true;
+
+  for (const m of members) {
+    const cal = m.macro_goals ? Number(m.macro_goals.calories) : 0;
+    if (cal <= 0) {
+      hasAllCalorieGoals = false;
+    }
+    totalCaloriesGoal += cal;
+  }
+
+  // If any member lacks a calorie goal or total calories is <= 0, do equal split
+  const useEqualSplit = !hasAllCalorieGoals || totalCaloriesGoal <= 0;
+  const numMembers = members.length;
+
+  return members.map(m => {
+    let scaleFactor = 0;
+    if (useEqualSplit) {
+      scaleFactor = 1 / numMembers;
+    } else {
+      scaleFactor = Number(m.macro_goals.calories) / totalCaloriesGoal;
+    }
+
+    return {
+      member_id: m.id,
+      name: m.name,
+      macros: {
+        calories: Math.round(baseMacros.calories * scaleFactor),
+        protein_g: Math.round(baseMacros.protein_g * scaleFactor * 10) / 10,
+        carbs_g: Math.round(baseMacros.carbs_g * scaleFactor * 10) / 10,
+        fat_g: Math.round(baseMacros.fat_g * scaleFactor * 10) / 10
+      }
+    };
+  });
 }
 
 export default {
@@ -319,8 +358,7 @@ export default {
             ingredients: JSON.parse(r.ingredients),
             instructions: JSON.parse(r.instructions),
             tips: r.tips,
-            fabiansPortion: JSON.parse(r.fabians_portion),
-            stefaniesPortion: JSON.parse(r.stefanies_portion)
+            macros: JSON.parse(r.macros)
           }));
 
           return new Response(JSON.stringify(list), { status: 200, headers: corsHeaders });
@@ -329,7 +367,7 @@ export default {
         if (method === "POST") {
           const r = await request.json();
           await db.prepare(
-            "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, fabians_portion, stefanies_portion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ).bind(
             r.id,
             r.name,
@@ -341,12 +379,50 @@ export default {
             JSON.stringify(r.ingredients),
             JSON.stringify(r.instructions),
             r.tips,
-            JSON.stringify(r.fabiansPortion || r.fabians_portion),
-            JSON.stringify(r.stefaniesPortion || r.stefanies_portion)
+            JSON.stringify(r.macros)
           ).run();
 
           return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
         }
+      }
+
+      // GET /api/recipes/:id/portions
+      if (method === "GET" && path.startsWith("/api/recipes/") && path.endsWith("/portions")) {
+        const parts = path.split("/");
+        // path is /api/recipes/:id/portions
+        const recipeId = parts[3];
+
+        const recipe = await db.prepare("SELECT * FROM recipes WHERE id = ?").bind(recipeId).first();
+        if (!recipe) {
+          return new Response(JSON.stringify({ error: "Recipe not found." }), { status: 404, headers: corsHeaders });
+        }
+
+        const household = await db.prepare("SELECT * FROM households WHERE user_id = ?").bind(userId).first();
+        if (!household) {
+          return new Response(JSON.stringify([]), { status: 200, headers: corsHeaders });
+        }
+
+        const membersRes = await db.prepare("SELECT * FROM household_members WHERE household_id = ? ORDER BY id ASC").bind(household.id).all();
+        const membersList = [];
+
+        for (const member of membersRes.results) {
+          const macros = await db.prepare("SELECT * FROM macro_goals WHERE member_id = ?").bind(member.id).first();
+          membersList.push({
+            id: member.id,
+            name: member.name,
+            macro_goals: macros ? {
+              calories: macros.calories,
+              protein_g: macros.protein_g,
+              carbs_g: macros.carbs_g,
+              fat_g: macros.fat_g
+            } : null
+          });
+        }
+
+        const baseMacros = JSON.parse(recipe.macros || '{"calories":800,"protein_g":70,"carbs_g":80,"fat_g":25}');
+        const splitPortions = calculateProportionalSplit(baseMacros, membersList);
+
+        return new Response(JSON.stringify(splitPortions), { status: 200, headers: corsHeaders });
       }
 
       // 2. Weekly Plan CRUD
