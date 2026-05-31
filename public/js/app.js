@@ -1327,6 +1327,7 @@ function populateRecipesTab() {
                 addToPlanBtn.disabled = false;
                 addToPlanBtn.onclick = (e) => addRecipeToPlanFromButton(e.currentTarget);
             }
+        }
         setupRecipeCardIngredientsAndWarnings(card, recipe, portionsContainer, viewRecipeBtn);
 
         grid.appendChild(clone);
