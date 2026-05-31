@@ -277,10 +277,11 @@
                     Auto-generated recipes matching your macros • Ingredients available at Tesco • Rotated weekly
                 </p>
 
-                <div class="buttons" style="margin-bottom: 20px;">
+                <div class="buttons" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; width: 100%;">
                     <button class="btn-primary" onclick="alert('Generating new recipes using your macros...')">🔄 Generate New Recipes</button>
                     <button id="favouritesFilterBtn" class="btn-secondary" onclick="toggleFavouritesFilter()">⭐ Show Favourites</button>
                     <button class="btn-secondary">🔗 Share Recipe</button>
+                    <button id="addRecipeBtn" class="btn-success" onclick="showAddRecipeModal()" style="margin-left: auto; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, var(--color-success) 0%, #219a52 100%);">➕ Add Recipe</button>
                 </div>
 
                 <h3 style="margin-top: 20px; margin-bottom: 15px;">Your Recipes</h3>
@@ -321,6 +322,93 @@
     <div class="modal" id="recipeModal">
         <div class="modal-content recipe-modal">
             <!-- JavaScript will populate content -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Recipe Modal -->
+    <div class="modal" id="recipeFormModal">
+        <div class="modal-content" style="max-width: 650px; padding: 25px; position: relative;">
+            <button class="modal-close" onclick="closeRecipeFormModal()">×</button>
+            <h2 id="recipeFormTitle" style="margin-bottom: 20px; background: linear-gradient(135deg, var(--color-primary), var(--color-success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">➕ Create Custom Recipe</h2>
+            <form id="recipeForm" onsubmit="handleRecipeFormSubmit(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="hidden" id="recipeFormId" value="">
+                
+                <!-- Basic info -->
+                <div class="form-group" style="display: flex; flex-direction: column;">
+                    <label for="recipeFormName" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Recipe Name *</label>
+                    <input type="text" id="recipeFormName" required placeholder="e.g. Garlic Butter Sirloin Bites" style="width: 100%;">
+                </div>
+                
+                <div class="form-group" style="display: flex; flex-direction: column;">
+                    <label for="recipeFormDescription" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Description</label>
+                    <textarea id="recipeFormDescription" placeholder="A brief description of this recipe..." style="width: 100%; padding: 10px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 14px; min-height: 60px; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormPrepTime" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Prep (mins) *</label>
+                        <input type="number" id="recipeFormPrepTime" required min="0" placeholder="e.g. 15" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormCookTime" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Cook (mins) *</label>
+                        <input type="number" id="recipeFormCookTime" required min="0" placeholder="e.g. 20" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormBaseServings" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Base Servings *</label>
+                        <input type="number" id="recipeFormBaseServings" required min="1" value="2" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormMinServings" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Min Servings</label>
+                        <input type="number" id="recipeFormMinServings" min="1" placeholder="e.g. 2" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormMaxServings" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Max Servings</label>
+                        <input type="number" id="recipeFormMaxServings" min="1" placeholder="e.g. 6" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormEstimatedCost" style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px;">Cost/Serving (£)</label>
+                        <input type="number" id="recipeFormEstimatedCost" min="0" step="0.01" placeholder="e.g. 2.50" style="width: 100%;">
+                    </div>
+                </div>
+                
+                <!-- Macros -->
+                <h4 style="border-bottom: 1px solid var(--color-border); padding-bottom: 5px; color: var(--color-primary); margin-top: 5px; font-size: 14px;">Macros per Serving</h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormCalories" style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 5px; color: var(--color-text);">Calories *</label>
+                        <input type="number" id="recipeFormCalories" required min="0" placeholder="kcal" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormProtein" style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 5px; color: var(--protein-color);">Protein *</label>
+                        <input type="number" id="recipeFormProtein" required min="0" step="0.1" placeholder="g" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormCarbs" style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 5px; color: var(--carb-color);">Carbs *</label>
+                        <input type="number" id="recipeFormCarbs" required min="0" step="0.1" placeholder="g" style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column;">
+                        <label for="recipeFormFat" style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 5px; color: var(--fat-color);">Fat *</label>
+                        <input type="number" id="recipeFormFat" required min="0" step="0.1" placeholder="g" style="width: 100%;">
+                    </div>
+                </div>
+                
+                <!-- Ingredients -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 5px; margin-top: 5px;">
+                    <h4 style="color: var(--color-primary); margin: 0; font-size: 14px;">Ingredients * (At least one)</h4>
+                    <button type="button" class="btn-primary" onclick="addRecipeFormIngredientRow()" style="padding: 6px 12px; font-size: 11px;">➕ Add Ingredient</button>
+                </div>
+                <div id="recipeFormIngredientsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Rows will be dynamically populated here -->
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeRecipeFormModal()">Cancel</button>
+                    <button type="submit" class="btn-success" id="recipeFormSubmitBtn" style="background: linear-gradient(135deg, var(--color-success), #059669);">Save Recipe</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -64,14 +64,28 @@ const API = {
   },
 
   // Recipes CRUD
-  async getRecipes() {
-    return this.request("/api/recipes");
+  async getRecipes(source) {
+    const url = source ? `/api/recipes?source=${encodeURIComponent(source)}` : "/api/recipes";
+    return this.request(url);
   },
 
   async saveRecipe(recipe) {
     return this.request("/api/recipes", {
       method: "POST",
       body: recipe
+    });
+  },
+
+  async updateRecipe(recipeId, recipe) {
+    return this.request(`/api/recipes/${recipeId}`, {
+      method: "PUT",
+      body: recipe
+    });
+  },
+
+  async deleteRecipe(recipeId) {
+    return this.request(`/api/recipes/${recipeId}`, {
+      method: "DELETE"
     });
   },
 

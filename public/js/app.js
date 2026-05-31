@@ -1307,10 +1307,113 @@ function populateRecipesTab() {
 
         const usedDay = usageById[recipe.id];
 
+        // Subtle visual indicator for custom recipes: purple border and Left "Custom" badge
+        if (recipe.is_custom) {
+            if (card) {
+                card.style.borderLeftColor = "#9b59b6";
+                
+                const customBadge = document.createElement("div");
+                customBadge.className = "custom-recipe-badge";
+                customBadge.textContent = "Custom";
+                customBadge.style.cssText = `
+                    position: absolute;
+                    top: 8px;
+                    left: 8px;
+                    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                    color: white;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-size: 9px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    z-index: 10;
+                `;
+                card.appendChild(customBadge);
+            }
+        }
+
+        // Show edit/delete icon controls on custom recipes owned by the logged-in user
+        if (recipe.is_custom && State.user && recipe.created_by_user_id === State.user.id) {
+            if (card) {
+                const controlsContainer = document.createElement("div");
+                controlsContainer.className = "recipe-card-controls";
+                controlsContainer.style.cssText = `
+                    position: absolute;
+                    top: 8px;
+                    right: 42px;
+                    display: flex;
+                    gap: 6px;
+                    z-index: 15;
+                `;
+                
+                const editBtn = document.createElement("button");
+                editBtn.className = "card-control-btn edit-btn";
+                editBtn.innerHTML = "✏️";
+                editBtn.title = "Edit recipe";
+                editBtn.style.cssText = `
+                    background: rgba(255, 255, 255, 0.95);
+                    border: 1px solid rgba(0, 0, 0, 0.1);
+                    border-radius: 50%;
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 12px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: all 0.2s;
+                `;
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    showEditRecipeModal(recipe.id);
+                };
+                
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "card-control-btn delete-btn";
+                deleteBtn.innerHTML = "🗑️";
+                deleteBtn.title = "Delete recipe";
+                deleteBtn.style.cssText = `
+                    background: rgba(255, 255, 255, 0.95);
+                    border: 1px solid rgba(0, 0, 0, 0.1);
+                    border-radius: 50%;
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 12px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: all 0.2s;
+                `;
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteCustomRecipe(recipe.id, recipe.name);
+                };
+
+                editBtn.onmouseenter = () => editBtn.style.transform = "scale(1.15)";
+                editBtn.onmouseleave = () => editBtn.style.transform = "scale(1)";
+                deleteBtn.onmouseenter = () => deleteBtn.style.transform = "scale(1.15)";
+                deleteBtn.onmouseleave = () => deleteBtn.style.transform = "scale(1)";
+                
+                controlsContainer.appendChild(editBtn);
+                controlsContainer.appendChild(deleteBtn);
+                card.appendChild(controlsContainer);
+            }
+        }
+
         if (badge) {
             if (usedDay) {
                 badge.textContent = `In plan (${usedDay})`;
                 badge.style.display = "inline-block";
+                // Prevent overlap with custom edit/delete buttons if present
+                if (recipe.is_custom && State.user && recipe.created_by_user_id === State.user.id) {
+                    badge.style.right = "108px";
+                } else {
+                    badge.style.right = "42px";
+                }
             } else {
                 badge.textContent = "";
                 badge.style.display = "none";
@@ -1599,6 +1702,258 @@ document.addEventListener("click", function (e) {
     const modal = document.getElementById("recipeModal");
     if (modal && e.target === modal) closeRecipeModal();
 });
+
+// =========================
+// CUSTOM RECIPES HANDLERS
+// =========================
+
+window.showAddRecipeModal = function() {
+    const modal = document.getElementById("recipeFormModal");
+    if (!modal) return;
+    
+    document.getElementById("recipeFormTitle").textContent = "➕ Create Custom Recipe";
+    document.getElementById("recipeFormId").value = "";
+    document.getElementById("recipeForm").reset();
+    
+    // Clear dynamic ingredients list
+    const ingContainer = document.getElementById("recipeFormIngredientsList");
+    if (ingContainer) {
+        ingContainer.innerHTML = "";
+        // Default with 1 blank row
+        addRecipeFormIngredientRow();
+    }
+    
+    modal.classList.add("active");
+};
+
+window.closeRecipeFormModal = function() {
+    const modal = document.getElementById("recipeFormModal");
+    if (modal) modal.classList.remove("active");
+};
+
+// Close recipeFormModal on click outside
+document.addEventListener("click", function (e) {
+    const modal = document.getElementById("recipeFormModal");
+    if (modal && e.target === modal) closeRecipeFormModal();
+});
+
+window.addRecipeFormIngredientRow = function(data = null) {
+    const container = document.getElementById("recipeFormIngredientsList");
+    if (!container) return;
+    
+    const row = document.createElement("div");
+    row.className = "recipe-form-ingredient-row";
+    row.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        margin-bottom: 4px;
+    `;
+    
+    row.innerHTML = `
+        <input type="text" placeholder="Ingredient name *" class="ing-name" required style="flex: 2; min-width: 130px; padding: 8px; font-size: 13px;" value="${data?.name || ''}">
+        <input type="number" step="any" min="0.001" placeholder="Qty *" class="ing-qty" required style="width: 70px; padding: 8px; font-size: 13px;" value="${data?.quantity_per_serving !== undefined ? data.quantity_per_serving : ''}">
+        <select class="ing-unit" required style="width: 85px; padding: 8px; font-size: 13px;">
+            ${["g", "kg", "ml", "l", "piece", "pack", "tin", "jar", "loaf", "box", "tbsp", "tsp", "whole", "pcs"]
+                .map(unit => `<option value="${unit}" ${data?.unit === unit ? 'selected' : ''}>${unit}</option>`).join("")}
+        </select>
+        <select class="ing-category" required style="width: 100px; padding: 8px; font-size: 13px;">
+            ${["produce", "protein", "dairy", "carbs", "pantry", "other"]
+                .map(cat => `<option value="${cat}" ${data?.category === cat ? 'selected' : ''}>${cat.charAt(0).toUpperCase() + cat.slice(1)}</option>`).join("")}
+        </select>
+        <input type="text" placeholder="Notes (optional)" class="ing-notes" style="flex: 1.5; min-width: 100px; padding: 8px; font-size: 13px;" value="${data?.notes || ''}">
+        <button type="button" class="btn-secondary remove-row-btn" onclick="this.closest('.recipe-form-ingredient-row').remove()" style="padding: 0; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 35px; width: 35px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);">🗑</button>
+    `;
+    
+    container.appendChild(row);
+};
+
+window.showEditRecipeModal = function(recipeId) {
+    const recipe = recipeBank.find(r => r.id === recipeId);
+    if (!recipe) return;
+    
+    const modal = document.getElementById("recipeFormModal");
+    if (!modal) return;
+    
+    document.getElementById("recipeFormTitle").textContent = "✏️ Edit Custom Recipe";
+    document.getElementById("recipeFormId").value = recipeId;
+    
+    document.getElementById("recipeFormName").value = recipe.name;
+    document.getElementById("recipeFormDescription").value = recipe.description || "";
+    
+    // Parse time strings (e.g. "20 min") to numbers
+    document.getElementById("recipeFormPrepTime").value = parseInt(recipe.prepTime) || 0;
+    document.getElementById("recipeFormCookTime").value = parseInt(recipe.cookTime) || 0;
+    document.getElementById("recipeFormBaseServings").value = recipe.servings;
+    
+    document.getElementById("recipeFormMinServings").value = recipe.min_servings !== null ? recipe.min_servings : "";
+    document.getElementById("recipeFormMaxServings").value = recipe.max_servings !== null ? recipe.max_servings : "";
+    document.getElementById("recipeFormEstimatedCost").value = recipe.estimated_cost_per_serving_gbp !== null ? recipe.estimated_cost_per_serving_gbp : "";
+    
+    // Scale macro base values (e.g. 1200 kcal for 2 servings) back to single serving (e.g. 600 kcal) for the form
+    const servings = recipe.servings || 2;
+    document.getElementById("recipeFormCalories").value = Math.round((recipe.macros?.calories || 0) / servings);
+    document.getElementById("recipeFormProtein").value = Math.round(((recipe.macros?.protein_g || 0) / servings) * 10) / 10;
+    document.getElementById("recipeFormCarbs").value = Math.round(((recipe.macros?.carbs_g || 0) / servings) * 10) / 10;
+    document.getElementById("recipeFormFat").value = Math.round(((recipe.macros?.fat_g || 0) / servings) * 10) / 10;
+    
+    // Populate ingredients
+    const ingContainer = document.getElementById("recipeFormIngredientsList");
+    ingContainer.innerHTML = "";
+    
+    if (Array.isArray(recipe.ingredients)) {
+        recipe.ingredients.forEach(ing => addRecipeFormIngredientRow(ing));
+    }
+    
+    if (ingContainer.children.length === 0) {
+        addRecipeFormIngredientRow();
+    }
+    
+    modal.classList.add("active");
+};
+
+window.handleRecipeFormSubmit = async function(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById("recipeFormSubmitBtn");
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = "0.7";
+    }
+    
+    try {
+        const recipeId = document.getElementById("recipeFormId").value;
+        const name = document.getElementById("recipeFormName").value.trim();
+        const description = document.getElementById("recipeFormDescription").value.trim();
+        const prep_time_mins = parseInt(document.getElementById("recipeFormPrepTime").value) || 0;
+        const cook_time_mins = parseInt(document.getElementById("recipeFormCookTime").value) || 0;
+        const base_servings = parseInt(document.getElementById("recipeFormBaseServings").value) || 2;
+        
+        const min_servings = document.getElementById("recipeFormMinServings").value !== "" ? parseInt(document.getElementById("recipeFormMinServings").value) : null;
+        const max_servings = document.getElementById("recipeFormMaxServings").value !== "" ? parseInt(document.getElementById("recipeFormMaxServings").value) : null;
+        const estimated_cost_per_serving_gbp = document.getElementById("recipeFormEstimatedCost").value !== "" ? parseFloat(document.getElementById("recipeFormEstimatedCost").value) : null;
+        
+        const calories = parseInt(document.getElementById("recipeFormCalories").value) || 0;
+        const protein = parseFloat(document.getElementById("recipeFormProtein").value) || 0;
+        const carbs = parseFloat(document.getElementById("recipeFormCarbs").value) || 0;
+        const fat = parseFloat(document.getElementById("recipeFormFat").value) || 0;
+        
+        // Retrieve and validate ingredient rows
+        const rowEls = document.querySelectorAll(".recipe-form-ingredient-row");
+        const ingredients = [];
+        
+        rowEls.forEach(row => {
+            const ingName = row.querySelector(".ing-name").value.trim();
+            const ingQty = parseFloat(row.querySelector(".ing-qty").value);
+            const ingUnit = row.querySelector(".ing-unit").value;
+            const ingCategory = row.querySelector(".ing-category").value;
+            const ingNotes = row.querySelector(".ing-notes").value.trim();
+            
+            if (ingName && !isNaN(ingQty) && ingQty > 0) {
+                ingredients.push({
+                    name: ingName,
+                    quantity_per_serving: ingQty,
+                    unit: ingUnit,
+                    category: ingCategory,
+                    notes: ingNotes || null
+                });
+            }
+        });
+        
+        if (!name) {
+            alert("Recipe name is required.");
+            throw new Error("Validation failed");
+        }
+        if (ingredients.length === 0) {
+            alert("At least one valid ingredient is required.");
+            throw new Error("Validation failed");
+        }
+        
+        const payload = {
+            name,
+            description,
+            prep_time_mins,
+            cook_time_mins,
+            base_servings,
+            min_servings,
+            max_servings,
+            estimated_cost_per_serving_gbp,
+            ingredients,
+            macros_per_serving: {
+                calories,
+                protein_g: protein,
+                carbs_g: carbs,
+                fat_g: fat
+            },
+            tags: []
+        };
+        
+        let responseRecipe;
+        if (recipeId) {
+            // Edit mode
+            responseRecipe = await API.updateRecipe(recipeId, payload);
+            
+            // Update in recipeBank
+            const index = recipeBank.findIndex(r => r.id === recipeId);
+            if (index !== -1) {
+                recipeBank[index] = responseRecipe;
+            }
+            showToast("Recipe updated successfully!", "success");
+        } else {
+            // Create mode
+            responseRecipe = await API.saveRecipe(payload);
+            recipeBank.push(responseRecipe);
+            showToast("Recipe created successfully!", "success");
+        }
+        
+        closeRecipeFormModal();
+        State.renderAll();
+    } catch (err) {
+        console.error(err);
+        if (err.message !== "Validation failed") {
+            alert(`Error saving recipe: ${err.message}`);
+        }
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+        }
+    }
+};
+
+window.deleteCustomRecipe = async function(recipeId, recipeName) {
+    const ok = confirm(`Delete "${recipeName}"? This will remove it from your week plan.`);
+    if (!ok) return;
+    
+    try {
+        await API.deleteRecipe(recipeId);
+        
+        // Remove from recipeBank
+        const index = recipeBank.findIndex(r => r.id === recipeId);
+        if (index !== -1) {
+            recipeBank.splice(index, 1);
+        }
+        
+        // Remove from weekly plan
+        if (State.weeklyPlan && Array.isArray(State.weeklyPlan.days)) {
+            State.weeklyPlan.days.forEach(d => {
+                if (d.recipeId === recipeId) d.recipeId = null;
+            });
+        }
+        
+        showToast("Recipe deleted successfully!", "success");
+        State.renderAll();
+    } catch (err) {
+        console.error(err);
+        alert(`Failed to delete recipe: ${err.message}`);
+    }
+};
 
 // =========================
 // 8. WEEKLY STAPLES (API PERSISTENCE)
@@ -2304,6 +2659,7 @@ async function syncAllData() {
             API.showLoginOverlay();
             return;
         }
+        State.user = session.user;
 
         // Show header logout button
         const logoutBtn = document.getElementById("logoutBtn");

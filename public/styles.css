@@ -791,3 +791,80 @@ select:focus {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+/* ==========================================================================
+   CUSTOM RECIPE CARD, CONTROLS & FORM STYLES
+   ========================================================================== */
+
+.custom-recipe-card {
+    border-left-color: #9b59b6 !important;
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.02) 0%, var(--color-surface) 100%) !important;
+}
+
+.custom-recipe-card:hover {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.06) 0%, var(--color-primary-light) 100%) !important;
+    border-left-color: #8e44ad !important;
+}
+
+.custom-recipe-badge {
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.35) !important;
+}
+
+.recipe-card-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.recipe-card-controls .card-control-btn {
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.recipe-card-controls .card-control-btn:hover {
+    background: #FFFFFF !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+}
+
+.recipe-form-ingredient-row {
+    transition: all 0.2s ease;
+}
+
+.recipe-form-ingredient-row:hover {
+    background: rgba(33, 134, 172, 0.05) !important;
+    border-color: rgba(33, 134, 172, 0.3) !important;
+}
+
+.recipe-form-ingredient-row input,
+.recipe-form-ingredient-row select {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    transition: all 0.2s ease;
+}
+
+.recipe-form-ingredient-row input:focus,
+.recipe-form-ingredient-row select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(33, 134, 172, 0.1);
+}
+
+.recipe-form-ingredient-row .remove-row-btn {
+    transition: all 0.2s ease;
+}
+
+.recipe-form-ingredient-row .remove-row-btn:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    transform: scale(1.08);
+}
+

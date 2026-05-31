@@ -404,19 +404,40 @@ export default {
       // 1. Recipes CRUD
       if (path === "/api/recipes") {
         if (method === "GET") {
-          const recipes = await db.prepare(`
-            SELECT r.*,
-                   (SELECT json_group_array(json_object(
-                      'id', ri.id,
-                      'name', ri.name,
-                      'quantity_per_serving', ri.quantity_per_serving,
-                      'unit', ri.unit,
-                      'notes', ri.notes,
-                      'category', ri.category
-                   )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
-            FROM recipes r
-            ORDER BY r.name ASC
-          `).all();
+          const source = url.searchParams.get("source");
+          let recipes;
+          
+          if (source === "custom") {
+            recipes = await db.prepare(`
+              SELECT r.*,
+                     (SELECT json_group_array(json_object(
+                        'id', ri.id,
+                        'name', ri.name,
+                        'quantity_per_serving', ri.quantity_per_serving,
+                        'unit', ri.unit,
+                        'notes', ri.notes,
+                        'category', ri.category
+                     )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+              FROM recipes r
+              WHERE r.is_custom = 1 AND r.created_by_user_id = ?
+              ORDER BY r.name ASC
+            `).bind(userId).all();
+          } else {
+            recipes = await db.prepare(`
+              SELECT r.*,
+                     (SELECT json_group_array(json_object(
+                        'id', ri.id,
+                        'name', ri.name,
+                        'quantity_per_serving', ri.quantity_per_serving,
+                        'unit', ri.unit,
+                        'notes', ri.notes,
+                        'category', ri.category
+                     )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+              FROM recipes r
+              WHERE r.is_custom = 0 OR (r.is_custom = 1 AND r.created_by_user_id = ?)
+              ORDER BY r.name ASC
+            `).bind(userId).all();
+          }
           
           const list = recipes.results.map(r => ({
             id: r.id,
@@ -429,38 +450,50 @@ export default {
             min_servings: r.min_servings,
             max_servings: r.max_servings,
             ingredients: JSON.parse(r.ingredients_json || "[]"),
-            instructions: JSON.parse(r.instructions),
-            tips: r.tips,
-            macros: JSON.parse(r.macros)
+            instructions: JSON.parse(r.instructions || "[]"),
+            tips: r.tips || "",
+            macros: JSON.parse(r.macros || "{}"),
+            is_custom: r.is_custom === 1,
+            created_by_user_id: r.created_by_user_id,
+            estimated_cost_per_serving_gbp: r.estimated_cost_per_serving_gbp,
+            tags: JSON.parse(r.tags || "[]")
           }));
 
           return new Response(JSON.stringify(list), { status: 200, headers: corsHeaders });
         }
 
         if (method === "POST") {
-          const r = await request.json();
+          const body = await request.json();
           
-          let flatIngredients = [];
-          if (Array.isArray(r.ingredients)) {
-            flatIngredients = r.ingredients;
-          } else if (r.ingredients && typeof r.ingredients === "object") {
-            for (const [category, items] of Object.entries(r.ingredients)) {
-              if (Array.isArray(items)) {
-                for (const item of items) {
-                  flatIngredients.push({
-                    name: item.name,
-                    quantity_per_serving: Number(item.quantity) / Number(r.servings),
-                    unit: item.unit,
-                    notes: item.notes || null,
-                    category: category
-                  });
-                }
-              }
-            }
+          // Validation
+          if (!body.name || body.name.trim().length === 0) {
+            return new Response(JSON.stringify({ error: "Recipe name is required." }), { status: 400, headers: corsHeaders });
+          }
+          if (!Array.isArray(body.ingredients) || body.ingredients.length === 0) {
+            return new Response(JSON.stringify({ error: "At least one ingredient is required." }), { status: 400, headers: corsHeaders });
+          }
+          if (!body.macros_per_serving || 
+              body.macros_per_serving.calories === undefined || 
+              body.macros_per_serving.protein_g === undefined || 
+              body.macros_per_serving.carbs_g === undefined || 
+              body.macros_per_serving.fat_g === undefined) {
+            return new Response(JSON.stringify({ error: "All macro fields are required." }), { status: 400, headers: corsHeaders });
+          }
+          
+          const baseServings = body.base_servings !== undefined ? Number(body.base_servings) : 2;
+          if (isNaN(baseServings) || baseServings <= 0) {
+            return new Response(JSON.stringify({ error: "Base servings must be a positive number." }), { status: 400, headers: corsHeaders });
           }
 
-          // Unit validation
-          for (const ing of flatIngredients) {
+          // Validate ingredients
+          for (const ing of body.ingredients) {
+            if (!ing.name || ing.name.trim().length === 0) {
+              return new Response(JSON.stringify({ error: "Ingredient name is required." }), { status: 400, headers: corsHeaders });
+            }
+            const qty = Number(ing.quantity_per_serving);
+            if (isNaN(qty) || qty <= 0) {
+              return new Response(JSON.stringify({ error: `Ingredient "${ing.name}" must have a positive quantity per serving.` }), { status: 400, headers: corsHeaders });
+            }
             const unit = (ing.unit || "").trim().toLowerCase();
             if (!ALLOWED_UNITS.has(unit)) {
               return new Response(
@@ -468,41 +501,61 @@ export default {
                 { status: 400, headers: corsHeaders }
               );
             }
+            if (!ing.category) {
+              return new Response(JSON.stringify({ error: `Ingredient "${ing.name}" must have a category.` }), { status: 400, headers: corsHeaders });
+            }
           }
 
-          const minServings = r.min_servings !== undefined ? r.min_servings : null;
-          const maxServings = r.max_servings !== undefined ? r.max_servings : null;
+          const recipeId = "custom-" + crypto.randomUUID();
+          
+          // Multiply macros_per_serving by base_servings to get total base macros, matching standard recipe data format
+          const baseMacros = {
+            calories: Math.round((Number(body.macros_per_serving.calories) || 0) * baseServings),
+            protein_g: Math.round((Number(body.macros_per_serving.protein_g) || 0) * baseServings * 10) / 10,
+            carbs_g: Math.round((Number(body.macros_per_serving.carbs_g) || 0) * baseServings * 10) / 10,
+            fat_g: Math.round((Number(body.macros_per_serving.fat_g) || 0) * baseServings * 10) / 10
+          };
+
+          const minServings = body.min_servings !== undefined && body.min_servings !== null && body.min_servings !== "" ? Number(body.min_servings) : null;
+          const maxServings = body.max_servings !== undefined && body.max_servings !== null && body.max_servings !== "" ? Number(body.max_servings) : null;
+          const estimatedCost = body.estimated_cost_per_serving_gbp !== undefined && body.estimated_cost_per_serving_gbp !== null && body.estimated_cost_per_serving_gbp !== "" ? Number(body.estimated_cost_per_serving_gbp) : null;
 
           const statements = [
-            db.prepare(
-              "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            ).bind(
-              r.id,
-              r.name,
-              r.emoji,
-              r.description,
-              r.prepTime || r.prep_time,
-              r.cookTime || r.cook_time,
-              r.servings,
-              JSON.stringify(r.ingredients),
-              JSON.stringify(r.instructions),
-              r.tips,
-              JSON.stringify(r.macros),
+            db.prepare(`
+              INSERT INTO recipes (
+                id, name, emoji, description, prep_time, cook_time, servings, 
+                ingredients, instructions, tips, macros, min_servings, max_servings, 
+                is_custom, created_by_user_id, estimated_cost_per_serving_gbp, tags
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+            `).bind(
+              recipeId,
+              body.name,
+              body.emoji || "🍳",
+              body.description || "",
+              `${body.prep_time_mins || 0} min`,
+              `${body.cook_time_mins || 0} min`,
+              baseServings,
+              JSON.stringify(body.ingredients || []),
+              JSON.stringify(body.instructions || []),
+              body.tips || "",
+              JSON.stringify(baseMacros),
               minServings,
-              maxServings
-            ),
-            db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(r.id)
+              maxServings,
+              userId,
+              estimatedCost,
+              JSON.stringify(body.tags || [])
+            )
           ];
 
-          for (const ing of flatIngredients) {
+          for (const ing of body.ingredients) {
             statements.push(
               db.prepare(
                 "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
               ).bind(
-                r.id,
+                recipeId,
                 ing.name,
-                ing.quantity_per_serving,
-                ing.unit,
+                Number(ing.quantity_per_serving),
+                ing.unit.trim().toLowerCase(),
                 ing.notes || null,
                 ing.category
               )
@@ -510,7 +563,29 @@ export default {
           }
 
           await db.batch(statements);
-          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+          
+          // Return the full created recipe object for the frontend to render immediately
+          const createdRecipe = {
+            id: recipeId,
+            name: body.name,
+            emoji: body.emoji || "🍳",
+            description: body.description || "",
+            prepTime: `${body.prep_time_mins || 0} min`,
+            cookTime: `${body.cook_time_mins || 0} min`,
+            servings: baseServings,
+            min_servings: minServings,
+            max_servings: maxServings,
+            ingredients: body.ingredients.map((ing, index) => ({ id: index + 1, ...ing, notes: ing.notes || null })),
+            instructions: body.instructions || [],
+            tips: body.tips || "",
+            macros: baseMacros,
+            is_custom: true,
+            created_by_user_id: userId,
+            estimated_cost_per_serving_gbp: estimatedCost,
+            tags: body.tags || []
+          };
+
+          return new Response(JSON.stringify(createdRecipe), { status: 200, headers: corsHeaders });
         }
       }
 
@@ -530,8 +605,8 @@ export default {
                     'category', ri.category
                  )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
           FROM recipes r
-          WHERE r.id = ?
-        `).bind(recipeId).first();
+          WHERE r.id = ? AND (r.is_custom = 0 OR r.created_by_user_id = ?)
+        `).bind(recipeId, userId).first();
 
         if (!r) {
           return new Response(JSON.stringify({ error: "Recipe not found." }), { status: 404, headers: corsHeaders });
@@ -548,9 +623,13 @@ export default {
           min_servings: r.min_servings,
           max_servings: r.max_servings,
           ingredients: JSON.parse(r.ingredients_json || "[]"),
-          instructions: JSON.parse(r.instructions),
-          tips: r.tips,
-          macros: JSON.parse(r.macros)
+          instructions: JSON.parse(r.instructions || "[]"),
+          tips: r.tips || "",
+          macros: JSON.parse(r.macros || "{}"),
+          is_custom: r.is_custom === 1,
+          created_by_user_id: r.created_by_user_id,
+          estimated_cost_per_serving_gbp: r.estimated_cost_per_serving_gbp,
+          tags: JSON.parse(r.tags || "[]")
         };
 
         return new Response(JSON.stringify(recipe), { status: 200, headers: corsHeaders });
@@ -560,30 +639,50 @@ export default {
       if (method === "PUT" && path.startsWith("/api/recipes/")) {
         const parts = path.split("/");
         const recipeId = parts[3];
-        const r = await request.json();
-        r.id = recipeId;
 
-        let flatIngredients = [];
-        if (Array.isArray(r.ingredients)) {
-          flatIngredients = r.ingredients;
-        } else if (r.ingredients && typeof r.ingredients === "object") {
-          for (const [category, items] of Object.entries(r.ingredients)) {
-            if (Array.isArray(items)) {
-              for (const item of items) {
-                flatIngredients.push({
-                  name: item.name,
-                  quantity_per_serving: Number(item.quantity) / Number(r.servings),
-                  unit: item.unit,
-                  notes: item.notes || null,
-                  category: category
-                });
-              }
-            }
-          }
+        const existing = await db.prepare("SELECT * FROM recipes WHERE id = ?").bind(recipeId).first();
+        if (!existing) {
+          return new Response(JSON.stringify({ error: "Recipe not found." }), { status: 404, headers: corsHeaders });
         }
 
-        // Unit validation
-        for (const ing of flatIngredients) {
+        if (existing.is_custom !== 1 || existing.created_by_user_id !== userId) {
+          return new Response(JSON.stringify({ error: "Unauthorized. You cannot modify built-in or other users' recipes." }), {
+            status: 403,
+            headers: corsHeaders
+          });
+        }
+
+        const body = await request.json();
+        
+        // Validation
+        if (!body.name || body.name.trim().length === 0) {
+          return new Response(JSON.stringify({ error: "Recipe name is required." }), { status: 400, headers: corsHeaders });
+        }
+        if (!Array.isArray(body.ingredients) || body.ingredients.length === 0) {
+          return new Response(JSON.stringify({ error: "At least one ingredient is required." }), { status: 400, headers: corsHeaders });
+        }
+        if (!body.macros_per_serving || 
+            body.macros_per_serving.calories === undefined || 
+            body.macros_per_serving.protein_g === undefined || 
+            body.macros_per_serving.carbs_g === undefined || 
+            body.macros_per_serving.fat_g === undefined) {
+          return new Response(JSON.stringify({ error: "All macro fields are required." }), { status: 400, headers: corsHeaders });
+        }
+        
+        const baseServings = body.base_servings !== undefined ? Number(body.base_servings) : 2;
+        if (isNaN(baseServings) || baseServings <= 0) {
+          return new Response(JSON.stringify({ error: "Base servings must be a positive number." }), { status: 400, headers: corsHeaders });
+        }
+
+        // Validate ingredients
+        for (const ing of body.ingredients) {
+          if (!ing.name || ing.name.trim().length === 0) {
+            return new Response(JSON.stringify({ error: "Ingredient name is required." }), { status: 400, headers: corsHeaders });
+          }
+          const qty = Number(ing.quantity_per_serving);
+          if (isNaN(qty) || qty <= 0) {
+            return new Response(JSON.stringify({ error: `Ingredient "${ing.name}" must have a positive quantity per serving.` }), { status: 400, headers: corsHeaders });
+          }
           const unit = (ing.unit || "").trim().toLowerCase();
           if (!ALLOWED_UNITS.has(unit)) {
             return new Response(
@@ -591,46 +690,114 @@ export default {
               { status: 400, headers: corsHeaders }
             );
           }
+          if (!ing.category) {
+            return new Response(JSON.stringify({ error: `Ingredient "${ing.name}" must have a category.` }), { status: 400, headers: corsHeaders });
+          }
         }
 
-        const minServings = r.min_servings !== undefined ? r.min_servings : null;
-        const maxServings = r.max_servings !== undefined ? r.max_servings : null;
+        // Base macros calculation
+        const baseMacros = {
+          calories: Math.round((Number(body.macros_per_serving.calories) || 0) * baseServings),
+          protein_g: Math.round((Number(body.macros_per_serving.protein_g) || 0) * baseServings * 10) / 10,
+          carbs_g: Math.round((Number(body.macros_per_serving.carbs_g) || 0) * baseServings * 10) / 10,
+          fat_g: Math.round((Number(body.macros_per_serving.fat_g) || 0) * baseServings * 10) / 10
+        };
+
+        const minServings = body.min_servings !== undefined && body.min_servings !== null && body.min_servings !== "" ? Number(body.min_servings) : null;
+        const maxServings = body.max_servings !== undefined && body.max_servings !== null && body.max_servings !== "" ? Number(body.max_servings) : null;
+        const estimatedCost = body.estimated_cost_per_serving_gbp !== undefined && body.estimated_cost_per_serving_gbp !== null && body.estimated_cost_per_serving_gbp !== "" ? Number(body.estimated_cost_per_serving_gbp) : null;
 
         const statements = [
-          db.prepare(
-            "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-          ).bind(
-            r.id,
-            r.name,
-            r.emoji,
-            r.description,
-            r.prepTime || r.prep_time,
-            r.cookTime || r.cook_time,
-            r.servings,
-            JSON.stringify(r.ingredients),
-            JSON.stringify(r.instructions),
-            r.tips,
-            JSON.stringify(r.macros),
+          db.prepare(`
+            UPDATE recipes SET 
+              name = ?, emoji = ?, description = ?, prep_time = ?, cook_time = ?, servings = ?, 
+              ingredients = ?, instructions = ?, tips = ?, macros = ?, min_servings = ?, max_servings = ?, 
+              estimated_cost_per_serving_gbp = ?, tags = ?
+            WHERE id = ?
+          `).bind(
+            body.name,
+            body.emoji || existing.emoji || "🍳",
+            body.description || "",
+            `${body.prep_time_mins || 0} min`,
+            `${body.cook_time_mins || 0} min`,
+            baseServings,
+            JSON.stringify(body.ingredients || []),
+            JSON.stringify(body.instructions || []),
+            body.tips || "",
+            JSON.stringify(baseMacros),
             minServings,
-            maxServings
+            maxServings,
+            estimatedCost,
+            JSON.stringify(body.tags || []),
+            recipeId
           ),
-          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(r.id)
+          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(recipeId)
         ];
 
-        for (const ing of flatIngredients) {
+        for (const ing of body.ingredients) {
           statements.push(
             db.prepare(
               "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
             ).bind(
-              r.id,
+              recipeId,
               ing.name,
-              ing.quantity_per_serving,
-              ing.unit,
+              Number(ing.quantity_per_serving),
+              ing.unit.trim().toLowerCase(),
               ing.notes || null,
               ing.category
             )
           );
         }
+
+        await db.batch(statements);
+        
+        // Return full updated recipe object
+        const updatedRecipe = {
+          id: recipeId,
+          name: body.name,
+          emoji: body.emoji || existing.emoji || "🍳",
+          description: body.description || "",
+          prepTime: `${body.prep_time_mins || 0} min`,
+          cookTime: `${body.cook_time_mins || 0} min`,
+          servings: baseServings,
+          min_servings: minServings,
+          max_servings: maxServings,
+          ingredients: body.ingredients.map((ing, index) => ({ id: index + 1, ...ing, notes: ing.notes || null })),
+          instructions: body.instructions || [],
+          tips: body.tips || "",
+          macros: baseMacros,
+          is_custom: true,
+          created_by_user_id: userId,
+          estimated_cost_per_serving_gbp: estimatedCost,
+          tags: body.tags || []
+        };
+
+        return new Response(JSON.stringify(updatedRecipe), { status: 200, headers: corsHeaders });
+      }
+
+      // DELETE /api/recipes/:id
+      if (method === "DELETE" && path.startsWith("/api/recipes/")) {
+        const parts = path.split("/");
+        const recipeId = parts[3];
+
+        const existing = await db.prepare("SELECT * FROM recipes WHERE id = ?").bind(recipeId).first();
+        if (!existing) {
+          return new Response(JSON.stringify({ error: "Recipe not found." }), { status: 404, headers: corsHeaders });
+        }
+
+        if (existing.is_custom !== 1 || existing.created_by_user_id !== userId) {
+          return new Response(JSON.stringify({ error: "Unauthorized. You cannot delete built-in or other users' recipes." }), {
+            status: 403,
+            headers: corsHeaders
+          });
+        }
+
+        const statements = [
+          db.prepare("DELETE FROM recipes WHERE id = ?").bind(recipeId),
+          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(recipeId),
+          db.prepare("DELETE FROM recipe_favourites WHERE recipe_id = ?").bind(recipeId),
+          db.prepare("UPDATE weekly_plan_days SET recipe_id = NULL WHERE recipe_id = ?").bind(recipeId)
+        ];
 
         await db.batch(statements);
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
