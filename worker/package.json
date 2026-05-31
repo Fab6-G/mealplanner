@@ -9,9 +9,8 @@
     "migrate:local": "wrangler d1 migrations apply DB --local",
     "migrate:remote": "wrangler d1 migrations apply DB --remote"
   },
-  "dependencies": {},
   "devDependencies": {
-    "wrangler": "^3.57.1"
+    "wrangler": "^4.95.0"
   },
   "private": true
 }
