@@ -104,6 +104,149 @@ function saveWeeklyPlan(plan) {
 // Initial local plan copy reference
 let weeklyPlan = State.weeklyPlan;
 
+// Helper to format scaled ingredient quantities beautifully using unicode fractions and units conversion
+function formatQuantity(quantity, unit) {
+    if (quantity <= 0) return "";
+    
+    let q = quantity;
+    let u = unit || "";
+    
+    // Convert 1000g to 1kg
+    if (u === "g" && q >= 1000) {
+        q = q / 1000;
+        u = "kg";
+    }
+    // Convert 1000ml to 1l
+    if (u === "ml" && q >= 1000) {
+        q = q / 1000;
+        u = "l";
+    }
+    
+    const formatFraction = (val) => {
+        const tolerance = 0.05;
+        const dec = val % 1;
+        const integer = Math.floor(val);
+        
+        let fractionStr = "";
+        if (Math.abs(dec - 0.25) < tolerance) {
+            fractionStr = "¼";
+        } else if (Math.abs(dec - 0.5) < tolerance) {
+            fractionStr = "½";
+        } else if (Math.abs(dec - 0.75) < tolerance) {
+            fractionStr = "¾";
+        } else if (Math.abs(dec - 0.33) < tolerance) {
+            fractionStr = "⅓";
+        } else if (Math.abs(dec - 0.67) < tolerance) {
+            fractionStr = "⅔";
+        }
+        
+        if (fractionStr) {
+            return integer > 0 ? `${integer} ${fractionStr}` : fractionStr;
+        }
+        
+        return val % 1 === 0 ? val.toString() : val.toFixed(1).replace(/\.0$/, "");
+    };
+    
+    const formattedVal = formatFraction(q);
+    return `${formattedVal} ${u}`.trim();
+}
+
+// Helper to setup collapsible ingredients list and locks warnings on recipe cards
+function setupRecipeCardIngredientsAndWarnings(card, recipe, portionsContainer, viewRecipeBtn) {
+    if (!card || !recipe || !portionsContainer || !viewRecipeBtn) return;
+    
+    const servingInfo = getRecipeServingInfo(recipe);
+    
+    // Remove old badge
+    let badgeEl = card.querySelector(".clamp-warning-badge");
+    if (badgeEl) badgeEl.remove();
+    
+    if (servingInfo.clamped) {
+        const badge = document.createElement("div");
+        badge.className = "clamp-warning-badge";
+        badge.style.cssText = `
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: #fbbf24;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+        `;
+        badge.innerHTML = `⚠️ Scaled to ${servingInfo.servings} servings (${servingInfo.clampType})`;
+        portionsContainer.parentNode.insertBefore(badge, portionsContainer.nextSibling);
+    }
+    
+    // Collapsible list
+    let collapsibleBtn = card.querySelector(".toggle-card-ingredients");
+    if (collapsibleBtn) collapsibleBtn.remove();
+    let collapsibleList = card.querySelector(".card-ingredients-list");
+    if (collapsibleList) collapsibleList.remove();
+    
+    collapsibleBtn = document.createElement("button");
+    collapsibleBtn.className = "btn-secondary toggle-card-ingredients";
+    collapsibleBtn.style.cssText = `
+        width: 100%;
+        margin-top: 8px;
+        font-size: 11px;
+        padding: 6px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 6px;
+    `;
+    collapsibleBtn.innerHTML = `<span>🧑‍🍳 Ingredients (${(recipe.ingredients || []).length})</span><span class="toggle-icon">▼</span>`;
+    
+    collapsibleList = document.createElement("div");
+    collapsibleList.className = "card-ingredients-list";
+    collapsibleList.style.cssText = `
+        display: none;
+        background: rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 4px;
+        max-height: 180px;
+        overflow-y: auto;
+        text-align: left;
+        font-size: 11px;
+    `;
+    
+    collapsibleBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isHidden = collapsibleList.style.display === "none";
+        collapsibleList.style.display = isHidden ? "block" : "none";
+        collapsibleBtn.querySelector(".toggle-icon").textContent = isHidden ? "▲" : "▼";
+    };
+    
+    let ingHtml = '<ul style="margin: 0; padding-left: 15px; line-height: 1.6;">';
+    const list = Array.isArray(recipe.ingredients) 
+        ? recipe.ingredients 
+        : Object.entries(recipe.ingredients).flatMap(([category, items]) => 
+            (Array.isArray(items) ? items.map(item => ({ ...item, category, quantity_per_serving: (item.quantity || 0) / (recipe.servings || 2) })) : [])
+          );
+          
+    list.forEach(ing => {
+        const qtyPerServing = ing.quantity_per_serving !== undefined 
+            ? ing.quantity_per_serving 
+            : (ing.quantity || 0) / (recipe.servings || 2);
+        const scaledQty = qtyPerServing * servingInfo.servings;
+        const formattedQty = formatQuantity(scaledQty, ing.unit);
+        const notesText = ing.notes ? ` <em>(${ing.notes})</em>` : "";
+        ingHtml += `<li>${formattedQty} ${ing.name}${notesText}</li>`;
+    });
+    ingHtml += '</ul>';
+    collapsibleList.innerHTML = ingHtml;
+    
+    viewRecipeBtn.parentNode.insertBefore(collapsibleBtn, viewRecipeBtn);
+    viewRecipeBtn.parentNode.insertBefore(collapsibleList, viewRecipeBtn.nextSibling);
+}
+
 // =========================
 // 2. PROFILE RENDERING
 // =========================
@@ -586,39 +729,83 @@ function buildShoppingListFromPlan() {
         dairy: [],
         carbs: [],
         pantry: [],
-        other: []
+        other: [],
+        staples: []
     };
 
-    function addIngredientToCategories(ing) {
-        const category = ing.category || "other";
-        const targetCategory = categories[category] ? category : "other";
-        const label = ing.name;
-        const qty = ing.quantity ?? 1;
-        const unit = ing.unit ?? "";
+    const staplesList = State.staples || [];
+    const stapleNames = new Set(staplesList.map(s => s.name.toLowerCase().trim()));
 
-        if (!categories[targetCategory]) {
-            categories[targetCategory] = [];
+    // Map to combine/aggregate staples to avoid duplication
+    const staplesMap = new Map();
+
+    // First, process recipe-derived ingredients
+    combinedIngredients.forEach(ing => {
+        const isStaple = stapleNames.has(ing.name.toLowerCase().trim());
+        if (isStaple) {
+            const nameLower = ing.name.toLowerCase().trim();
+            if (!staplesMap.has(nameLower)) {
+                staplesMap.set(nameLower, {
+                    label: ing.name,
+                    quantity: ing.quantity,
+                    unit: ing.unit,
+                    category: ing.category,
+                    isStaple: true,
+                    fromRecipe: true
+                });
+            } else {
+                staplesMap.get(nameLower).quantity += ing.quantity;
+            }
+        } else {
+            const category = ing.category || "other";
+            const targetCategory = categories[category] ? category : "other";
+            const qty = ing.quantity ?? 1;
+            
+            categories[targetCategory].push({
+                label: ing.name,
+                quantityText: formatQuantity(qty, ing.unit),
+                category: ing.category,
+                unit: ing.unit,
+                isStaple: false
+            });
         }
+    });
 
-        categories[targetCategory].push({
-            label,
-            quantityText: `${qty} ${unit}`.trim(),
-            category,
-            unit
-        });
-    }
+    // Second, process weekly staples themselves
+    staplesList.forEach(staple => {
+        const nameLower = staple.name.toLowerCase().trim();
+        if (!staplesMap.has(nameLower)) {
+            staplesMap.set(nameLower, {
+                label: staple.name,
+                quantity: staple.quantity,
+                unit: staple.unit,
+                category: staple.category,
+                isStaple: true,
+                fromStaple: true
+            });
+        } else {
+            const existing = staplesMap.get(nameLower);
+            if (existing.unit.toLowerCase() === staple.unit.toLowerCase()) {
+                existing.quantity += staple.quantity;
+            }
+            existing.fromStaple = true;
+        }
+    });
 
-    // From weekly recipes
-    combinedIngredients.forEach(addIngredientToCategories);
-
-    // From weekly staples.json in localStorage
-    const weeklyStaples = loadWeeklyStaples();
-    weeklyStaples.forEach(staple => {
-        addIngredientToCategories({
-            name: staple.name,
-            quantity: staple.quantity,
-            unit: staple.unit,
-            category: staple.category
+    // Populate the staples category array
+    staplesMap.forEach(item => {
+        const qty = item.quantity ?? 1;
+        categories.staples.push({
+            label: item.label,
+            quantityText: formatQuantity(qty, item.unit),
+            category: item.category,
+            unit: item.unit,
+            isStaple: true,
+            sourceText: item.fromRecipe && item.fromStaple 
+                ? " (Recipe + Staple)" 
+                : item.fromRecipe 
+                    ? " (Recipe)" 
+                    : " (Staple)"
         });
     });
 
@@ -643,16 +830,27 @@ function buildShoppingListFromPlan() {
         items.forEach(item => {
             const label = document.createElement("label");
             label.className = "shop-item";
+            if (item.isStaple) {
+                label.style.opacity = "0.85";
+            }
 
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
 
             const itemKey = `${item.category}::${item.label.toLowerCase()}::${(item.unit || "").toLowerCase()}`;
             checkbox.setAttribute("data-item-key", itemKey);
+            checkbox.setAttribute("data-item-name", item.label);
+            checkbox.setAttribute("data-item-qty", item.rawQuantity || 1);
+            checkbox.setAttribute("data-item-unit", item.unit || "");
+            checkbox.setAttribute("data-item-category", item.category || "other");
 
             const nameSpan = document.createElement("span");
             nameSpan.style.flex = "2";
-            nameSpan.textContent = item.label;
+            if (item.isStaple) {
+                nameSpan.innerHTML = `${item.label} <span style="font-size: 10px; color: var(--color-warning); opacity: 0.8; font-style: italic; font-weight: 600;">${item.sourceText}</span>`;
+            } else {
+                nameSpan.textContent = item.label;
+            }
 
             const qtySpan = document.createElement("span");
             qtySpan.style.flex = "1";
@@ -675,14 +873,27 @@ function buildShoppingListFromPlan() {
     renderCategory("🌾", "Grains & Carbs", categories.carbs);
     renderCategory("🏪", "Pantry Staples", categories.pantry);
     renderCategory("📦", "Other Items", categories.other);
+    renderCategory("🏡", "Staples (Usually kept on hand)", categories.staples);
 
-    updateCostSummary();
+    updateCostSummary(categories);
 }
 
-// Placeholder summary while you have no catalog
-function updateCostSummary() {
-    const weeklyStaples = loadWeeklyStaples();
-    const totalLines = combinedIngredients.length + weeklyStaples.length;
+// Summary calculation based on actual lists
+function updateCostSummary(categories) {
+    let totalLines = 0;
+    if (categories) {
+        totalLines = categories.produce.length + 
+                     categories.protein.length + 
+                     categories.dairy.length + 
+                     categories.carbs.length + 
+                     categories.pantry.length + 
+                     categories.other.length + 
+                     categories.staples.length;
+    } else {
+        const weeklyStaples = loadWeeklyStaples();
+        totalLines = combinedIngredients.length + weeklyStaples.length;
+    }
+    
     const estimatedCost = totalLines * 3.50;
     const perDayCost = estimatedCost / 7;
 
@@ -781,35 +992,22 @@ async function addShoppingListToInventory() {
     const currentInventory = await API.getInventory();
     const itemsToSave = [];
 
-    itemLabels.forEach((itemEl, index) => {
+    itemLabels.forEach((itemEl) => {
         const checkbox = itemEl.querySelector("input[type='checkbox']");
-        const spans = itemEl.querySelectorAll("span");
-        const name = spans[0]?.textContent.trim() || "";
-        const qtyText = spans[1]?.textContent.trim() || "";
-        const ingredient = combinedIngredients[index];
+        if (!checkbox) return;
 
-        let quantity = 1;
-        let unit = "";
-        if (qtyText) {
-            const parts = qtyText.split(/\s+/);
-            const maybeQty = parseFloat(parts[0].replace(",", "."));
-            if (!maybeQty || isNaN(maybeQty)) {
-                unit = qtyText;
-            } else {
-                quantity = maybeQty;
-                unit = parts.slice(1).join(" ") || "";
-            }
-        }
-
-        const isChecked = checkbox && checkbox.checked;
+        const name = checkbox.getAttribute("data-item-name");
+        const quantity = parseFloat(checkbox.getAttribute("data-item-qty")) || 1;
+        const unit = checkbox.getAttribute("data-item-unit") || "";
+        const category = checkbox.getAttribute("data-item-category") || "other";
+        const isChecked = checkbox.checked;
 
         if (!isChecked && name && quantity > 0) {
-            const category = ingredient && ingredient.category ? ingredient.category : "other";
             const existing = currentInventory.find(
                 inv =>
                     inv.name.toLowerCase() === name.toLowerCase() &&
-                    inv.unit === unit &&
-                    inv.category === category
+                    inv.unit.toLowerCase() === unit.toLowerCase() &&
+                    inv.category.toLowerCase() === category.toLowerCase()
             );
 
             if (existing) {
@@ -829,10 +1027,8 @@ async function addShoppingListToInventory() {
             }
         }
 
-        if (checkbox) {
-            checkbox.checked = true;
-            itemEl.classList.add("checked");
-        }
+        checkbox.checked = true;
+        itemEl.classList.add("checked");
     });
 
     await Promise.all(itemsToSave.map(item => API.saveInventoryItem(item)));
@@ -855,8 +1051,18 @@ function renderRecipePortions(container, recipe) {
         return;
     }
 
+    const servingInfo = getRecipeServingInfo(recipe);
+    const scale = servingInfo.servings / recipe.servings;
     const baseMacros = recipe.macros || { calories: 800, protein_g: 70, carbs_g: 80, fat_g: 25 };
-    const splits = calculateProportionalSplit(baseMacros, members);
+    
+    const scaledMacros = {
+        calories: baseMacros.calories * scale,
+        protein_g: baseMacros.protein_g * scale,
+        carbs_g: baseMacros.carbs_g * scale,
+        fat_g: baseMacros.fat_g * scale
+    };
+
+    const splits = calculateProportionalSplit(scaledMacros, members);
 
     splits.forEach(split => {
         const card = document.createElement("div");
@@ -937,6 +1143,8 @@ function populateMealPlans() {
                 removeBtn.style.display = "block";
                 removeBtn.onclick = () => removeRecipeFromPlan(index);
             }
+
+            setupRecipeCardIngredientsAndWarnings(clone.querySelector(".meal-item"), recipe, portionsContainer, viewRecipeBtn);
         }
 
         container.appendChild(clone);
@@ -1119,7 +1327,7 @@ function populateRecipesTab() {
                 addToPlanBtn.disabled = false;
                 addToPlanBtn.onclick = (e) => addRecipeToPlanFromButton(e.currentTarget);
             }
-        }
+        setupRecipeCardIngredientsAndWarnings(card, recipe, portionsContainer, viewRecipeBtn);
 
         grid.appendChild(clone);
     });
@@ -1237,16 +1445,35 @@ function showRecipeModal(recipe) {
         other: "Other"
     };
 
+    const servingInfo = getRecipeServingInfo(recipe);
+    
+    // Group flat ingredients by category
+    const list = Array.isArray(recipe.ingredients) 
+        ? recipe.ingredients 
+        : Object.entries(recipe.ingredients).flatMap(([category, items]) => 
+            (Array.isArray(items) ? items.map(item => ({ ...item, category, quantity_per_serving: (item.quantity || 0) / (recipe.servings || 2) })) : [])
+          );
+
+    const grouped = {};
+    list.forEach(ing => {
+        const cat = ing.category || "other";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(ing);
+    });
+
     let ingredientsHtml = "";
 
-    for (const [category, items] of Object.entries(recipe.ingredients || {})) {
-        if (!items || !items.length) continue;
+    for (const [category, items] of Object.entries(grouped)) {
         const label = categoryLabels[category] || category;
         const listItems = items
             .map(ing => {
-                const qty = ing.quantity ?? 0;
-                const unit = ing.unit ? ` ${ing.unit}` : "";
-                return `<li>${qty}${unit} ${ing.name}</li>`;
+                const qtyPerServing = ing.quantity_per_serving !== undefined 
+                    ? ing.quantity_per_serving 
+                    : (ing.quantity || 0) / (recipe.servings || 2);
+                const scaledQty = qtyPerServing * servingInfo.servings;
+                const formattedQty = formatQuantity(scaledQty, ing.unit);
+                const notesText = ing.notes ? ` <em>(${ing.notes})</em>` : "";
+                return `<li>${formattedQty} ${ing.name}${notesText}</li>`;
             })
             .join("");
 
@@ -1270,8 +1497,17 @@ function showRecipeModal(recipe) {
     if (members.length === 0) {
         portionsHtml = `<div style="color: var(--color-warning); font-size: 12px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">Set up your household in Settings to see portion targets.</div>`;
     } else {
+        const scale = servingInfo.servings / recipe.servings;
         const baseMacros = recipe.macros || { calories: 800, protein_g: 70, carbs_g: 80, fat_g: 25 };
-        const splits = calculateProportionalSplit(baseMacros, members);
+        
+        const scaledMacros = {
+            calories: baseMacros.calories * scale,
+            protein_g: baseMacros.protein_g * scale,
+            carbs_g: baseMacros.carbs_g * scale,
+            fat_g: baseMacros.fat_g * scale
+        };
+
+        const splits = calculateProportionalSplit(scaledMacros, members);
         
         portionsHtml = splits.map(split => {
             const labelText = members.length > 1 ? `👤 ${split.name}: ` : "";
@@ -1284,6 +1520,16 @@ function showRecipeModal(recipe) {
                 </div>
             `;
         }).join("");
+    }
+
+    let clampWarningHtml = "";
+    if (servingInfo.clamped) {
+        clampWarningHtml = `
+            <div class="clamp-warning-badge" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 6px; line-height: 1.4;">
+                ⚠️ This recipe is locked between ${recipe.min_servings} and ${recipe.max_servings} servings. 
+                Scaled to ${servingInfo.servings} servings (${servingInfo.clampType}).
+            </div>
+        `;
     }
 
     const recipeContent = `
@@ -1301,10 +1547,12 @@ function showRecipeModal(recipe) {
         </div>
         <div class="stat" style="background: rgba(255,255,255,0.1); padding: 8px;">
           <div class="stat-label" style="color: rgba(255,255,255,0.8);">👥 Serves</div>
-          <div class="stat-value" style="color: white; font-size: 14px;">${recipe.servings}</div>
+          <div class="stat-value" style="color: white; font-size: 14px;">${servingInfo.servings}</div>
         </div>
       </div>
     </div>
+
+    ${clampWarningHtml}
 
     <div class="recipe-sections">
       <div class="recipe-section">

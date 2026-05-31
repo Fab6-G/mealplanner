@@ -760,29 +760,75 @@ function calculateProportionalSplit(baseMacros, members) {
     });
 }
 
+function getRecipeServingInfo(recipe) {
+    const householdSize = window.State && window.State.household && window.State.household.members 
+        ? window.State.household.members.length 
+        : 2;
+    const min = recipe.min_servings !== undefined ? recipe.min_servings : null;
+    const max = recipe.max_servings !== undefined ? recipe.max_servings : null;
+    
+    let target = householdSize;
+    let clamped = false;
+    let clampType = null;
+    
+    if (min !== null && target < min) {
+        target = min;
+        clamped = true;
+        clampType = 'min';
+    } else if (max !== null && target > max) {
+        target = max;
+        clamped = true;
+        clampType = 'max';
+    }
+    
+    return {
+        householdSize,
+        servings: target,
+        clamped,
+        clampType
+    };
+}
+
 function getAllIngredientsNormalised(recipes) {
     // Map key: "category::name::unit"
     const map = new Map();
 
     for (const r of recipes) {
         if (!r.ingredients) continue;
-        for (const [category, items] of Object.entries(r.ingredients)) {
-            if (!Array.isArray(items)) continue;
-            for (const ing of items) {
-                if (!ing || !ing.name) continue;
-                const unit = normaliseUnit(ing.unit);
-                const key = `${category}::${ing.name.toLowerCase()}::${unit}`;
-                if (!map.has(key)) {
-                    map.set(key, {
-                        category,
-                        name: ing.name,
-                        quantity: ing.quantity || 0,
-                        unit
-                    });
-                } else {
-                    const existing = map.get(key);
-                    existing.quantity += ing.quantity || 0;
-                }
+        
+        // Get target serving count for this recipe
+        const servingInfo = getRecipeServingInfo(r);
+        const targetServings = servingInfo.servings;
+        
+        // Support both old nested object and new flat array
+        const list = Array.isArray(r.ingredients) 
+            ? r.ingredients 
+            : Object.entries(r.ingredients).flatMap(([category, items]) => 
+                (Array.isArray(items) ? items.map(item => ({ ...item, category, quantity_per_serving: (item.quantity || 0) / (r.servings || 2) })) : [])
+              );
+
+        for (const ing of list) {
+            if (!ing || !ing.name) continue;
+            
+            const qtyPerServing = ing.quantity_per_serving !== undefined 
+                ? ing.quantity_per_serving 
+                : (ing.quantity || 0) / (r.servings || 2);
+                
+            const scaledQty = qtyPerServing * targetServings;
+            const unit = normaliseUnit(ing.unit);
+            const category = ing.category || "other";
+            const key = `${category}::${ing.name.toLowerCase()}::${unit}`;
+            
+            if (!map.has(key)) {
+                map.set(key, {
+                    category,
+                    name: ing.name,
+                    quantity: scaledQty,
+                    unit
+                });
+            } else {
+                const existing = map.get(key);
+                existing.quantity += scaledQty;
             }
         }
     }

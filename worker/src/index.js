@@ -3,6 +3,9 @@
 
 import { defaultRecipes, defaultStaples } from "./seedData.js";
 
+// Controlled vocabulary for recipe ingredient units
+const ALLOWED_UNITS = new Set(["g", "kg", "ml", "l", "piece", "pack", "tin", "jar", "loaf", "box", "tbsp", "tsp", "whole", "pcs"]);
+
 // Helper to hash password using PBKDF2 (built-in Web Crypto API)
 async function hashPassword(password, salt) {
   const enc = new TextEncoder();
@@ -80,7 +83,7 @@ async function seedRecipesIfEmpty(db) {
       for (const r of defaultRecipes) {
         statements.push(
           db.prepare(
-            "INSERT INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ).bind(
             r.id,
             r.name,
@@ -92,13 +95,37 @@ async function seedRecipesIfEmpty(db) {
             JSON.stringify(r.ingredients),
             JSON.stringify(r.instructions),
             r.tips,
-            JSON.stringify(r.macros)
+            JSON.stringify(r.macros),
+            r.min_servings !== undefined ? r.min_servings : null,
+            r.max_servings !== undefined ? r.max_servings : null
           )
         );
+
+        if (r.ingredients) {
+          for (const [category, items] of Object.entries(r.ingredients)) {
+            if (Array.isArray(items)) {
+              for (const ing of items) {
+                const qtyPerServing = Number(ing.quantity) / Number(r.servings);
+                statements.push(
+                  db.prepare(
+                    "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+                  ).bind(
+                    r.id,
+                    ing.name,
+                    qtyPerServing,
+                    ing.unit,
+                    null,
+                    category
+                  )
+                );
+              }
+            }
+          }
+        }
       }
       if (statements.length > 0) {
         await db.batch(statements);
-        console.log("Successfully seeded", statements.length, "recipes");
+        console.log("Successfully seeded", defaultRecipes.length, "recipes");
       }
     }
   } catch (err) {
@@ -377,10 +404,20 @@ export default {
       // 1. Recipes CRUD
       if (path === "/api/recipes") {
         if (method === "GET") {
-          // Fetch recipes from D1
-          const recipes = await db.prepare("SELECT * FROM recipes ORDER BY name ASC").all();
+          const recipes = await db.prepare(`
+            SELECT r.*,
+                   (SELECT json_group_array(json_object(
+                      'id', ri.id,
+                      'name', ri.name,
+                      'quantity_per_serving', ri.quantity_per_serving,
+                      'unit', ri.unit,
+                      'notes', ri.notes,
+                      'category', ri.category
+                   )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+            FROM recipes r
+            ORDER BY r.name ASC
+          `).all();
           
-          // Map stored JSON back to object properties
           const list = recipes.results.map(r => ({
             id: r.id,
             name: r.name,
@@ -389,7 +426,9 @@ export default {
             prepTime: r.prep_time,
             cookTime: r.cook_time,
             servings: r.servings,
-            ingredients: JSON.parse(r.ingredients),
+            min_servings: r.min_servings,
+            max_servings: r.max_servings,
+            ingredients: JSON.parse(r.ingredients_json || "[]"),
             instructions: JSON.parse(r.instructions),
             tips: r.tips,
             macros: JSON.parse(r.macros)
@@ -400,8 +439,166 @@ export default {
 
         if (method === "POST") {
           const r = await request.json();
-          await db.prepare(
-            "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          
+          let flatIngredients = [];
+          if (Array.isArray(r.ingredients)) {
+            flatIngredients = r.ingredients;
+          } else if (r.ingredients && typeof r.ingredients === "object") {
+            for (const [category, items] of Object.entries(r.ingredients)) {
+              if (Array.isArray(items)) {
+                for (const item of items) {
+                  flatIngredients.push({
+                    name: item.name,
+                    quantity_per_serving: Number(item.quantity) / Number(r.servings),
+                    unit: item.unit,
+                    notes: item.notes || null,
+                    category: category
+                  });
+                }
+              }
+            }
+          }
+
+          // Unit validation
+          for (const ing of flatIngredients) {
+            const unit = (ing.unit || "").trim().toLowerCase();
+            if (!ALLOWED_UNITS.has(unit)) {
+              return new Response(
+                JSON.stringify({ error: `Invalid unit: "${unit}". Allowed units are: ${Array.from(ALLOWED_UNITS).join(", ")}` }),
+                { status: 400, headers: corsHeaders }
+              );
+            }
+          }
+
+          const minServings = r.min_servings !== undefined ? r.min_servings : null;
+          const maxServings = r.max_servings !== undefined ? r.max_servings : null;
+
+          const statements = [
+            db.prepare(
+              "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            ).bind(
+              r.id,
+              r.name,
+              r.emoji,
+              r.description,
+              r.prepTime || r.prep_time,
+              r.cookTime || r.cook_time,
+              r.servings,
+              JSON.stringify(r.ingredients),
+              JSON.stringify(r.instructions),
+              r.tips,
+              JSON.stringify(r.macros),
+              minServings,
+              maxServings
+            ),
+            db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(r.id)
+          ];
+
+          for (const ing of flatIngredients) {
+            statements.push(
+              db.prepare(
+                "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+              ).bind(
+                r.id,
+                ing.name,
+                ing.quantity_per_serving,
+                ing.unit,
+                ing.notes || null,
+                ing.category
+              )
+            );
+          }
+
+          await db.batch(statements);
+          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+        }
+      }
+
+      // GET /api/recipes/:id
+      if (method === "GET" && path.startsWith("/api/recipes/") && !path.endsWith("/portions")) {
+        const parts = path.split("/");
+        const recipeId = parts[3];
+
+        const r = await db.prepare(`
+          SELECT r.*,
+                 (SELECT json_group_array(json_object(
+                    'id', ri.id,
+                    'name', ri.name,
+                    'quantity_per_serving', ri.quantity_per_serving,
+                    'unit', ri.unit,
+                    'notes', ri.notes,
+                    'category', ri.category
+                 )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+          FROM recipes r
+          WHERE r.id = ?
+        `).bind(recipeId).first();
+
+        if (!r) {
+          return new Response(JSON.stringify({ error: "Recipe not found." }), { status: 404, headers: corsHeaders });
+        }
+
+        const recipe = {
+          id: r.id,
+          name: r.name,
+          emoji: r.emoji,
+          description: r.description,
+          prepTime: r.prep_time,
+          cookTime: r.cook_time,
+          servings: r.servings,
+          min_servings: r.min_servings,
+          max_servings: r.max_servings,
+          ingredients: JSON.parse(r.ingredients_json || "[]"),
+          instructions: JSON.parse(r.instructions),
+          tips: r.tips,
+          macros: JSON.parse(r.macros)
+        };
+
+        return new Response(JSON.stringify(recipe), { status: 200, headers: corsHeaders });
+      }
+
+      // PUT /api/recipes/:id
+      if (method === "PUT" && path.startsWith("/api/recipes/")) {
+        const parts = path.split("/");
+        const recipeId = parts[3];
+        const r = await request.json();
+        r.id = recipeId;
+
+        let flatIngredients = [];
+        if (Array.isArray(r.ingredients)) {
+          flatIngredients = r.ingredients;
+        } else if (r.ingredients && typeof r.ingredients === "object") {
+          for (const [category, items] of Object.entries(r.ingredients)) {
+            if (Array.isArray(items)) {
+              for (const item of items) {
+                flatIngredients.push({
+                  name: item.name,
+                  quantity_per_serving: Number(item.quantity) / Number(r.servings),
+                  unit: item.unit,
+                  notes: item.notes || null,
+                  category: category
+                });
+              }
+            }
+          }
+        }
+
+        // Unit validation
+        for (const ing of flatIngredients) {
+          const unit = (ing.unit || "").trim().toLowerCase();
+          if (!ALLOWED_UNITS.has(unit)) {
+            return new Response(
+              JSON.stringify({ error: `Invalid unit: "${unit}". Allowed units are: ${Array.from(ALLOWED_UNITS).join(", ")}` }),
+              { status: 400, headers: corsHeaders }
+            );
+          }
+        }
+
+        const minServings = r.min_servings !== undefined ? r.min_servings : null;
+        const maxServings = r.max_servings !== undefined ? r.max_servings : null;
+
+        const statements = [
+          db.prepare(
+            "INSERT OR REPLACE INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ).bind(
             r.id,
             r.name,
@@ -413,17 +610,35 @@ export default {
             JSON.stringify(r.ingredients),
             JSON.stringify(r.instructions),
             r.tips,
-            JSON.stringify(r.macros)
-          ).run();
+            JSON.stringify(r.macros),
+            minServings,
+            maxServings
+          ),
+          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(r.id)
+        ];
 
-          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+        for (const ing of flatIngredients) {
+          statements.push(
+            db.prepare(
+              "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+            ).bind(
+              r.id,
+              ing.name,
+              ing.quantity_per_serving,
+              ing.unit,
+              ing.notes || null,
+              ing.category
+            )
+          );
         }
+
+        await db.batch(statements);
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
       }
 
       // GET /api/recipes/:id/portions
       if (method === "GET" && path.startsWith("/api/recipes/") && path.endsWith("/portions")) {
         const parts = path.split("/");
-        // path is /api/recipes/:id/portions
         const recipeId = parts[3];
 
         const recipe = await db.prepare("SELECT * FROM recipes WHERE id = ?").bind(recipeId).first();
@@ -433,7 +648,7 @@ export default {
 
         const household = await db.prepare("SELECT * FROM households WHERE user_id = ?").bind(userId).first();
         if (!household) {
-          return new Response(JSON.stringify([]), { status: 200, headers: corsHeaders });
+          return new Response(JSON.stringify({ portions: [], clamped: false, servings: recipe.servings }), { status: 200, headers: corsHeaders });
         }
 
         const membersRes = await db.prepare("SELECT * FROM household_members WHERE household_id = ? ORDER BY id ASC").bind(household.id).all();
@@ -454,9 +669,40 @@ export default {
         }
 
         const baseMacros = JSON.parse(recipe.macros || '{"calories":800,"protein_g":70,"carbs_g":80,"fat_g":25}');
-        const splitPortions = calculateProportionalSplit(baseMacros, membersList);
+        const householdSize = membersList.length;
+        const minServings = recipe.min_servings;
+        const maxServings = recipe.max_servings;
 
-        return new Response(JSON.stringify(splitPortions), { status: 200, headers: corsHeaders });
+        let targetServings = householdSize;
+        let clamped = false;
+        let clampType = null;
+
+        if (minServings !== null && targetServings < minServings) {
+          targetServings = minServings;
+          clamped = true;
+          clampType = 'min';
+        } else if (maxServings !== null && targetServings > maxServings) {
+          targetServings = maxServings;
+          clamped = true;
+          clampType = 'max';
+        }
+
+        const scaleFactor = targetServings / recipe.servings;
+        const scaledMacros = {
+          calories: baseMacros.calories * scaleFactor,
+          protein_g: baseMacros.protein_g * scaleFactor,
+          carbs_g: baseMacros.carbs_g * scaleFactor,
+          fat_g: baseMacros.fat_g * scaleFactor
+        };
+
+        const splitPortions = calculateProportionalSplit(scaledMacros, membersList);
+
+        return new Response(JSON.stringify({
+          portions: splitPortions,
+          clamped,
+          clampType,
+          servings: targetServings
+        }), { status: 200, headers: corsHeaders });
       }
 
       // 2. Weekly Plan CRUD
