@@ -876,3 +876,213 @@ select:focus {
     transform: scale(1.08);
 }
 
+
+/* ==========================================================================
+   SETTINGS LAYOUT & SIDEBAR STYLES
+   ========================================================================== */
+
+.settings-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    align-items: flex-start;
+}
+
+.settings-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: sticky;
+    top: 20px;
+    z-index: 10;
+}
+
+.settings-sidebar-link {
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: var(--color-text-light);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.settings-sidebar-link:hover {
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.settings-sidebar-link.active {
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    font-weight: 600;
+    border-left-color: var(--color-primary);
+}
+
+.settings-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* Compact Display Density Styles */
+html[data-density="compact"] .card {
+    padding: 12px 16px !important;
+}
+
+html[data-density="compact"] .meal-item,
+html[data-density="compact"] .recipe-card {
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+}
+
+html[data-density="compact"] .grid,
+html[data-density="compact"] .recipe-grid,
+html[data-density="compact"] .inventory-grid {
+    gap: 12px !important;
+}
+
+html[data-density="compact"] .tabs {
+    margin-bottom: 15px !important;
+}
+
+/* ==========================================================================
+   THEME STYLING VARIABLES & TRANSITIONS
+   ========================================================================== */
+
+/* Accent swatch styles */
+.accent-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.accent-swatch:hover {
+    transform: scale(1.15);
+}
+
+.accent-swatch.active {
+    border-color: #000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
+}
+
+html.dark-mode .accent-swatch.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+/* Dark Mode Overrides */
+html.dark-mode {
+    --color-bg: #121824;
+    --color-surface: #1E293B;
+    --color-text: #F1F5F9;
+    --color-text-light: #94A3B8;
+    --color-border: #334155;
+    --color-primary-light: rgba(33, 134, 172, 0.15);
+}
+
+html.dark-mode body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+html.dark-mode input[type="text"],
+html.dark-mode input[type="number"],
+html.dark-mode select,
+html.dark-mode textarea {
+    background-color: #0F172A;
+    border-color: #334155;
+    color: #F1F5F9;
+}
+
+html.dark-mode .btn-secondary {
+    background-color: #334155;
+    color: #F1F5F9;
+}
+
+html.dark-mode .btn-secondary:hover {
+    background-color: #475569;
+    color: #fff;
+}
+
+html.dark-mode .meal-item,
+html.dark-mode .recipe-card {
+    background: #1E293B;
+    border-color: #334155;
+}
+
+html.dark-mode .meal-item:hover,
+html.dark-mode .recipe-card:hover {
+    background: #334155 !important;
+}
+
+html.dark-mode .shop-item {
+    background-color: #1E293B;
+    border-color: #334155;
+}
+
+html.dark-mode .shop-item:hover {
+    background-color: #334155;
+    border-color: var(--color-primary);
+}
+
+html.dark-mode .category-group {
+    background-color: #0F172A;
+    border-color: #334155;
+}
+
+html.dark-mode .modal-content {
+    background-color: #1E293B;
+    color: #F1F5F9;
+    border: 1px solid #334155;
+}
+
+html.dark-mode .stats .stat {
+    background-color: #0F172A;
+}
+
+html.dark-mode .custom-recipe-card {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, var(--color-surface) 100%) !important;
+}
+
+html.dark-mode .custom-recipe-card:hover {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.2) 0%, var(--color-surface) 100%) !important;
+}
+
+/* Responsive sidebars for Settings */
+@media (max-width: 768px) {
+    .settings-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .settings-sidebar {
+        width: 100%;
+        position: static;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .settings-sidebar-link {
+        white-space: nowrap;
+        padding: 8px 12px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .settings-sidebar-link.active {
+        border-bottom-color: var(--color-primary);
+    }
+}
+
+

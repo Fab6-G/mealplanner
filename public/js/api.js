@@ -116,9 +116,24 @@ const API = {
   },
 
   async saveWeeklyPlan(weekLabel, days) {
+    const serializedDays = [];
+    days.forEach(d => {
+      if (d.recipeIds) {
+        // Main slot (slot 0)
+        serializedDays.push({ day: d.day, recipeId: d.recipeIds[0] });
+        // Extra slots (slots 1 to 4)
+        for (let s = 1; s < 5; s++) {
+          if (d.recipeIds[s] !== undefined && d.recipeIds[s] !== null) {
+            serializedDays.push({ day: `${d.day}-${s}`, recipeId: d.recipeIds[s] });
+          }
+        }
+      } else {
+        serializedDays.push({ day: d.day, recipeId: d.recipeId });
+      }
+    });
     return this.request("/api/weekly-plan", {
       method: "POST",
-      body: { week_label: weekLabel, days }
+      body: { week_label: weekLabel, days: serializedDays }
     });
   },
 
@@ -224,6 +239,45 @@ const API = {
       body: memberData
     });
   },
+
+  // User Preferences CRUD
+  async getPreferences() {
+    return this.request("/api/preferences");
+  },
+
+  async updatePreferences(preferences) {
+    return this.request("/api/preferences", {
+      method: "PUT",
+      body: preferences
+    });
+  },
+
+  // Weekly Plan Clear Endpoint
+  async deleteWeeklyPlan(weekLabel) {
+    return this.request(`/api/week-plan?week_label=${encodeURIComponent(weekLabel)}`, {
+      method: "DELETE"
+    });
+  },
+
+  // Danger Zone Deletions
+  async deleteCustomRecipes() {
+    return this.request("/api/recipes/custom", {
+      method: "DELETE"
+    });
+  },
+
+  async resetHousehold() {
+    return this.request("/api/household", {
+      method: "DELETE"
+    });
+  },
+
+  async deleteAccount() {
+    return this.request("/api/auth/account", {
+      method: "DELETE"
+    });
+  },
+
 
   // Dynamically inject a beautiful glassmorphic login overlay
   showLoginOverlay() {

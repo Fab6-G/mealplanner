@@ -368,6 +368,80 @@ export default {
       const userId = user.user_id;
 
       // ==========================================
+      // User Preferences & Settings Endpoints
+      // ==========================================
+      if (path === "/api/preferences") {
+        if (method === "GET") {
+          let prefs = await db.prepare("SELECT * FROM user_preferences WHERE user_id = ?").bind(userId).first();
+          if (!prefs) {
+            prefs = { preferred_supermarket: null, show_staples_in_list: 1 };
+          }
+          return new Response(JSON.stringify({
+            preferred_supermarket: prefs.preferred_supermarket,
+            show_staples_in_list: prefs.show_staples_in_list === 1
+          }), { status: 200, headers: corsHeaders });
+        }
+
+        if (method === "PUT") {
+          const { preferred_supermarket, show_staples_in_list } = await request.json();
+          await db.prepare(`
+            INSERT INTO user_preferences (user_id, preferred_supermarket, show_staples_in_list, updated_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id) DO UPDATE SET
+              preferred_supermarket = excluded.preferred_supermarket,
+              show_staples_in_list = excluded.show_staples_in_list,
+              updated_at = CURRENT_TIMESTAMP
+          `).bind(
+            userId,
+            preferred_supermarket !== undefined ? preferred_supermarket : null,
+            show_staples_in_list ? 1 : 0
+          ).run();
+          return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+        }
+      }
+
+      if (path === "/api/recipes/custom" && method === "DELETE") {
+        const statements = [
+          db.prepare("UPDATE weekly_plan_days SET recipe_id = NULL WHERE recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = ? AND is_custom = 1)").bind(userId),
+          db.prepare("DELETE FROM recipe_favourites WHERE recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = ? AND is_custom = 1)").bind(userId),
+          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = ? AND is_custom = 1)").bind(userId),
+          db.prepare("DELETE FROM recipes WHERE created_by_user_id = ? AND is_custom = 1").bind(userId)
+        ];
+        await db.batch(statements);
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+      }
+
+      if (path === "/api/household" && method === "DELETE") {
+        await db.prepare("DELETE FROM households WHERE user_id = ?").bind(userId).run();
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+      }
+
+      if (path === "/api/auth/account" && method === "DELETE") {
+        const statements = [
+          db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id IN (SELECT id FROM recipes WHERE created_by_user_id = ?)").bind(userId),
+          db.prepare("DELETE FROM recipes WHERE created_by_user_id = ?").bind(userId),
+          db.prepare("DELETE FROM users WHERE id = ?").bind(userId)
+        ];
+        await db.batch(statements);
+        
+        const responseHeaders = { ...corsHeaders };
+        responseHeaders["Set-Cookie"] = `session=; Path=/; HttpOnly; Secure; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: responseHeaders });
+      }
+
+      if (path === "/api/week-plan" && method === "DELETE") {
+        const weekLabel = url.searchParams.get("week_label") || "This week";
+        const plan = await db.prepare("SELECT id FROM weekly_plans WHERE user_id = ? AND week_label = ?")
+          .bind(userId, weekLabel)
+          .first();
+        if (plan) {
+          await db.prepare("DELETE FROM weekly_plan_days WHERE weekly_plan_id = ?").bind(plan.id).run();
+        }
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+      }
+
+
+      // ==========================================
       // Favourites Endpoints
       // ==========================================
       if (path === "/api/favourites") {

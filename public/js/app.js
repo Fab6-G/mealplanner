@@ -1,6 +1,49 @@
-// =========================
-// 0. DEBUG OVERLAY + TABS
-// =========================
+// ==========================================
+// 0. APP STYLING & CUSTOMIZATION SETUP
+// ==========================================
+const ACCENT_PALETTES = {
+    ocean: { primary: "#2186AC", light: "#E8F4F8" },
+    emerald: { primary: "#27AE60", light: "#E8F8F0" },
+    sunset: { primary: "#E67E22", light: "#FDEDEC" },
+    purple: { primary: "#8E44AD", light: "#F5EEF8" },
+    crimson: { primary: "#C0392B", light: "#FDEDEC" },
+    sunflower: { primary: "#F1C40F", light: "#FEF9E7" }
+};
+
+window.applyTheme = function() {
+    const theme = localStorage.getItem("theme") || "System";
+    let isDark = false;
+    if (theme === "Dark") {
+        isDark = true;
+    } else if (theme === "System") {
+        isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    
+    if (isDark) {
+        document.documentElement.classList.add("dark-mode");
+        document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+        document.documentElement.classList.remove("dark-mode");
+        document.documentElement.setAttribute("data-theme", "light");
+    }
+};
+
+window.applyAccentColor = function() {
+    const accentKey = localStorage.getItem("accentColor") || "ocean";
+    const palette = ACCENT_PALETTES[accentKey] || ACCENT_PALETTES.ocean;
+    document.documentElement.style.setProperty("--color-primary", palette.primary);
+    document.documentElement.style.setProperty("--color-primary-light", palette.light);
+};
+
+window.applyDensity = function() {
+    const density = localStorage.getItem("density") || "comfortable";
+    document.documentElement.setAttribute("data-density", density);
+};
+
+// Run customizations immediately before DOM renders to prevent flicker
+applyTheme();
+applyAccentColor();
+applyDensity();
 
 document.addEventListener("DOMContentLoaded", function () {
     // Debug overlay
@@ -15,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
         el.innerHTML = message + "<br>" + el.innerHTML;
     };
 
-    // Tab switching
+    // Tab switching with hash updates
     window.switchTab = function (tabId) {
         const tabButtons = document.querySelectorAll(".tab-btn");
         const tabContents = document.querySelectorAll(".tab-content");
@@ -34,18 +77,69 @@ document.addEventListener("DOMContentLoaded", function () {
             selectedContent.style.display = "block";
             selectedContent.classList.add("active");
         }
+
+        if (window.location.hash !== `#${tabId}`) {
+            window.location.hash = tabId;
+        }
+
+        // Auto trigger initSettingsPage when settings tab loads
+        if (tabId === "settings" && typeof initSettingsPage === "function") {
+            initSettingsPage();
+        }
     };
+
+    const handleHash = () => {
+        const hash = window.location.hash.slice(1);
+        const validTabs = ["dashboard", "meals", "staples", "shopping", "inventory", "recipes", "settings"];
+        if (validTabs.includes(hash)) {
+            switchTab(hash);
+        } else {
+            switchTab("dashboard");
+        }
+    };
+
+    window.addEventListener("hashchange", handleHash);
 
     document.querySelectorAll(".tab-btn").forEach(button => {
         button.addEventListener("click", function (e) {
             e.preventDefault();
-            switchTab(this.getAttribute("data-tab"));
+            const tabId = this.getAttribute("data-tab");
+            switchTab(tabId);
         });
         button.addEventListener("touchstart", function (e) {
             e.preventDefault();
-            switchTab(this.getAttribute("data-tab"));
+            const tabId = this.getAttribute("data-tab");
+            switchTab(tabId);
         });
     });
+
+    // Make old settingsBtn in header redirect to Settings tab
+    const headerSettingsBtn = document.getElementById("settingsBtn");
+    if (headerSettingsBtn) {
+        headerSettingsBtn.removeAttribute("onclick");
+        headerSettingsBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchTab("settings");
+        });
+    }
+
+    // Set active link highlight on Settings sidebar anchor links
+    const sidebarLinks = document.querySelectorAll(".settings-sidebar-link");
+    sidebarLinks.forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute("href");
+            const targetSec = document.querySelector(targetId);
+            if (targetSec) {
+                targetSec.scrollIntoView({ behavior: "smooth" });
+                sidebarLinks.forEach(l => l.classList.remove("active"));
+                this.classList.add("active");
+            }
+        });
+    });
+
+    // Check initial hash route
+    handleHash();
 });
 
 // =========================
@@ -736,6 +830,7 @@ function buildShoppingListFromPlan() {
 
     const staplesList = State.staples || [];
     const stapleNames = new Set(staplesList.map(s => s.name.toLowerCase().trim()));
+    const showStaples = State.preferences ? State.preferences.show_staples_in_list : true;
 
     // Map to combine/aggregate staples to avoid duplication
     const staplesMap = new Map();
@@ -744,6 +839,10 @@ function buildShoppingListFromPlan() {
     combinedIngredients.forEach(ing => {
         const isStaple = stapleNames.has(ing.name.toLowerCase().trim());
         if (isStaple) {
+            if (!showStaples) {
+                // Completely skip recipe ingredients that match staples if toggle is off
+                return;
+            }
             const nameLower = ing.name.toLowerCase().trim();
             if (!staplesMap.has(nameLower)) {
                 staplesMap.set(nameLower, {
@@ -773,42 +872,46 @@ function buildShoppingListFromPlan() {
     });
 
     // Second, process weekly staples themselves
-    staplesList.forEach(staple => {
-        const nameLower = staple.name.toLowerCase().trim();
-        if (!staplesMap.has(nameLower)) {
-            staplesMap.set(nameLower, {
-                label: staple.name,
-                quantity: staple.quantity,
-                unit: staple.unit,
-                category: staple.category,
-                isStaple: true,
-                fromStaple: true
-            });
-        } else {
-            const existing = staplesMap.get(nameLower);
-            if (existing.unit.toLowerCase() === staple.unit.toLowerCase()) {
-                existing.quantity += staple.quantity;
+    if (showStaples) {
+        staplesList.forEach(staple => {
+            const nameLower = staple.name.toLowerCase().trim();
+            if (!staplesMap.has(nameLower)) {
+                staplesMap.set(nameLower, {
+                    label: staple.name,
+                    quantity: staple.quantity,
+                    unit: staple.unit,
+                    category: staple.category,
+                    isStaple: true,
+                    fromStaple: true
+                });
+            } else {
+                const existing = staplesMap.get(nameLower);
+                if (existing.unit.toLowerCase() === staple.unit.toLowerCase()) {
+                    existing.quantity += staple.quantity;
+                }
+                existing.fromStaple = true;
             }
-            existing.fromStaple = true;
-        }
-    });
+        });
+    }
 
     // Populate the staples category array
-    staplesMap.forEach(item => {
-        const qty = item.quantity ?? 1;
-        categories.staples.push({
-            label: item.label,
-            quantityText: formatQuantity(qty, item.unit),
-            category: item.category,
-            unit: item.unit,
-            isStaple: true,
-            sourceText: item.fromRecipe && item.fromStaple 
-                ? " (Recipe + Staple)" 
-                : item.fromRecipe 
-                    ? " (Recipe)" 
-                    : " (Staple)"
+    if (showStaples) {
+        staplesMap.forEach(item => {
+            const qty = item.quantity ?? 1;
+            categories.staples.push({
+                label: item.label,
+                quantityText: formatQuantity(qty, item.unit),
+                category: item.category,
+                unit: item.unit,
+                isStaple: true,
+                sourceText: item.fromRecipe && item.fromStaple 
+                    ? " (Recipe + Staple)" 
+                    : item.fromRecipe 
+                        ? " (Recipe)" 
+                        : " (Staple)"
+            });
         });
-    });
+    }
 
     const container = document.getElementById("shoppingList");
     if (!container) return;
@@ -1102,50 +1205,89 @@ function populateMealPlans() {
 
     container.innerHTML = "";
 
-    State.weeklyPlan.days.forEach((entry, index) => {
-        const recipe = entry.recipeId ? getRecipeById(entry.recipeId) : null;
-        const clone = template.content.cloneNode(true);
+    // 1. Get weekStartDay sorting order
+    let daysToRender = State.weeklyPlan.days.map((entry, index) => ({ entry, index }));
+    const weekStartDay = localStorage.getItem("weekStartDay") || "Monday";
+    if (weekStartDay === "Sunday") {
+        const sundayIndex = daysToRender.findIndex(d => d.entry.day === "Sunday");
+        if (sundayIndex !== -1) {
+            const sunday = daysToRender.splice(sundayIndex, 1)[0];
+            daysToRender.unshift(sunday);
+        }
+    }
 
+    // 2. Get mealsPerDay slot names
+    const mealsPerDay = parseInt(localStorage.getItem("mealsPerDay") || "1");
+    const slotNames = getSlotNames(mealsPerDay);
+
+    daysToRender.forEach(({ entry, index }) => {
+        const clone = template.content.cloneNode(true);
         const dayHeading = clone.querySelector("h3");
         if (dayHeading) dayHeading.textContent = entry.day;
 
-        const mealName = clone.querySelector(".meal-name");
-        const portionsContainer = clone.querySelector(".portions-container");
-        const timeSpan = clone.querySelector(".recipe-time");
-        const viewRecipeBtn = clone.querySelector(".view-recipe");
-        const removeBtn = clone.querySelector(".remove-recipe");
+        const dayDiv = clone.querySelector("div");
+        const defaultMealItem = dayDiv.querySelector(".meal-item");
+        if (defaultMealItem) defaultMealItem.remove();
 
-        if (!recipe) {
-            if (mealName) mealName.textContent = "No recipe selected";
-            if (portionsContainer) portionsContainer.innerHTML = "";
-            if (timeSpan) timeSpan.textContent = "N/A";
-            if (viewRecipeBtn) viewRecipeBtn.disabled = true;
-            if (removeBtn) removeBtn.style.display = "none";
-        } else {
-            if (mealName) mealName.textContent = `${recipe.emoji} ${recipe.name}`;
+        // Build slots for meals
+        for (let slot = 0; slot < mealsPerDay; slot++) {
+            const slotRecipeId = entry.recipeIds ? entry.recipeIds[slot] : (slot === 0 ? entry.recipeId : null);
+            const recipe = slotRecipeId ? getRecipeById(slotRecipeId) : null;
+            
+            const mealItem = document.createElement("div");
+            mealItem.className = `meal-item recipe-card ${recipe ? "shared-dinner" : ""}`;
+            mealItem.style.position = "relative";
+            mealItem.style.marginBottom = "15px";
 
-            if (portionsContainer) {
-                renderRecipePortions(portionsContainer, recipe);
+            let slotHtml = `
+                <div class="meal-time" style="font-weight: 700; color: var(--color-primary); font-size: 11px; margin-bottom: 6px; text-transform: uppercase;">${slotNames[slot]}</div>
+            `;
+
+            if (!recipe) {
+                slotHtml += `
+                    <div class="meal-name" style="font-style: italic; color: var(--color-text-light); font-size: 14px;">No recipe planned</div>
+                    <button class="btn-secondary add-recipe-btn-slot" onclick="openAddRecipeForDayAndSlot(${index}, ${slot})" style="width: 100%; margin-top: 8px; font-size: 11px; padding: 6px 10px;">
+                        ➕ Plan a Meal
+                    </button>
+                `;
+                mealItem.innerHTML = slotHtml;
+            } else {
+                slotHtml += `
+                    <div class="meal-name" style="font-weight: 600; font-size: 15px; margin-bottom: 8px;">${recipe.emoji} ${recipe.name}</div>
+                    <div class="portions-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                    <div class="meal-macros" style="margin-top: 8px;">
+                        <div style="font-size: 11px; color: var(--color-text-light);">
+                            <strong>Prep & Cook:</strong> <span class="recipe-time">${recipe.prepTime || ""} • ${recipe.cookTime || ""}</span>
+                        </div>
+                    </div>
+                    <button class="btn-secondary view-recipe" style="width: 100%; margin-top: 10px; font-size: 11px; padding: 6px 10px;">
+                        📖 View Full Recipe
+                    </button>
+                    <button class="btn-secondary remove-recipe" style="width: 100%; margin-top: 6px; font-size: 11px; padding: 6px 10px; color: var(--color-danger); border-color: rgba(239, 68, 68, 0.25);">
+                        🗑 Remove from Plan
+                    </button>
+                `;
+                mealItem.innerHTML = slotHtml;
+
+                const portionsContainer = mealItem.querySelector(".portions-container");
+                if (portionsContainer) {
+                    renderRecipePortions(portionsContainer, recipe);
+                }
+
+                const viewBtn = mealItem.querySelector(".view-recipe");
+                if (viewBtn) {
+                    viewBtn.onclick = () => showRecipeModal(recipe);
+                }
+
+                const removeBtn = mealItem.querySelector(".remove-recipe");
+                if (removeBtn) {
+                    removeBtn.onclick = () => removeRecipeFromPlanSlot(index, slot);
+                }
+
+                setupRecipeCardIngredientsAndWarnings(mealItem, recipe, portionsContainer, viewBtn);
             }
 
-            if (timeSpan) {
-                const prep = recipe.prepTime || "";
-                const cook = recipe.cookTime || "";
-                timeSpan.textContent =
-                    prep && cook ? `${prep} prep • ${cook} cook` : prep || cook || "N/A";
-            }
-
-            if (viewRecipeBtn) {
-                viewRecipeBtn.disabled = false;
-                viewRecipeBtn.onclick = () => showRecipeModal(recipe);
-            }
-
-            if (removeBtn) {
-                removeBtn.style.display = "block";
-                removeBtn.onclick = () => removeRecipeFromPlan(index);
-            }
-
-            setupRecipeCardIngredientsAndWarnings(clone.querySelector(".meal-item"), recipe, portionsContainer, viewRecipeBtn);
+            dayDiv.appendChild(mealItem);
         }
 
         container.appendChild(clone);
@@ -1454,32 +1596,86 @@ function addRecipeToPlanFromButton(btn) {
     addRecipeToPlan(recipeId);
 }
 
-// Add/clear/remove dinners optimistically
-async function addRecipeToPlan(recipeId) {
+// Add/clear/remove meals using custom day and slot selector
+function addRecipeToPlan(recipeId) {
+    currentAddingRecipeId = recipeId;
+    
+    const modal = document.getElementById("addToPlanModal");
+    const daySelect = document.getElementById("addToPlanDaySelect");
+    const slotSelect = document.getElementById("addToPlanSlotSelect");
+    
+    if (!modal || !daySelect || !slotSelect) return;
+    
+    // Populate Day dropdown
+    daySelect.innerHTML = "";
+    const currentWeekStart = localStorage.getItem("weekStartDay") || "Monday";
+    const daysOrder = currentWeekStart === "Sunday"
+        ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        
+    daysOrder.forEach(day => {
+        const option = document.createElement("option");
+        option.value = day;
+        option.textContent = day;
+        daySelect.appendChild(option);
+    });
+
+    // Populate Slot dropdown
+    slotSelect.innerHTML = "";
+    const mealsPerDay = parseInt(localStorage.getItem("mealsPerDay") || "1");
+    const slotNames = getSlotNames(mealsPerDay);
+    for (let s = 0; s < mealsPerDay; s++) {
+        const option = document.createElement("option");
+        option.value = s;
+        option.textContent = slotNames[s];
+        slotSelect.appendChild(option);
+    }
+    
+    // Bind click confirmation
+    const confirmBtn = document.getElementById("addToPlanConfirmBtn");
+    confirmBtn.onclick = async () => {
+        const chosenDay = daySelect.value;
+        const chosenSlot = parseInt(slotSelect.value);
+        
+        await executeAddRecipeToSlot(currentAddingRecipeId, chosenDay, chosenSlot);
+        closeAddToPlanModal();
+    };
+
+    modal.classList.add("active");
+}
+
+window.closeAddToPlanModal = function() {
+    const modal = document.getElementById("addToPlanModal");
+    if (modal) modal.classList.remove("active");
+};
+
+async function executeAddRecipeToSlot(recipeId, dayName, slotIndex) {
     if (!State.weeklyPlan || !Array.isArray(State.weeklyPlan.days)) {
         State.weeklyPlan = structuredClone(defaultWeeklyPlan);
     }
 
-    const firstEmptyIndex = State.weeklyPlan.days.findIndex(d => !d.recipeId);
-    if (firstEmptyIndex === -1) {
-        alert("This week's plan is full (Monday–Sunday). Clear or edit it before adding more.");
-        return;
-    }
+    const dayObjIndex = State.weeklyPlan.days.findIndex(d => d.day === dayName);
+    if (dayObjIndex === -1) return;
 
-    // 1. Fallback for rollback
     const fallbackPlan = structuredClone(State.weeklyPlan);
 
-    // 2. Mutate state optimistically
-    State.weeklyPlan.days[firstEmptyIndex].recipeId = recipeId;
-    
-    // 3. Immediately re-render
+    // Initialize recipeIds if not present
+    if (!State.weeklyPlan.days[dayObjIndex].recipeIds) {
+        State.weeklyPlan.days[dayObjIndex].recipeIds = [null, null, null, null, null];
+        State.weeklyPlan.days[dayObjIndex].recipeIds[0] = State.weeklyPlan.days[dayObjIndex].recipeId;
+    }
+
+    State.weeklyPlan.days[dayObjIndex].recipeIds[slotIndex] = recipeId;
+    if (slotIndex === 0) {
+        State.weeklyPlan.days[dayObjIndex].recipeId = recipeId;
+    }
+
     State.renderAll();
 
-    // 4. Save to API in background
     try {
         await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
+        showToast("Recipe added to your meal plan!", "success");
     } catch (err) {
-        // 5. Rollback on failure
         showToast("Failed to save meal plan. Changes rolled back.", "error");
         State.weeklyPlan = fallbackPlan;
         State.renderAll();
@@ -1487,22 +1683,27 @@ async function addRecipeToPlan(recipeId) {
 }
 
 async function removeRecipeFromPlan(dayIndex) {
+    await removeRecipeFromPlanSlot(dayIndex, 0);
+}
+
+async function removeRecipeFromPlanSlot(dayIndex, slotIndex) {
     if (!State.weeklyPlan || !Array.isArray(State.weeklyPlan.days)) return;
 
-    // 1. Fallback for rollback
     const fallbackPlan = structuredClone(State.weeklyPlan);
 
-    // 2. Mutate state optimistically
-    State.weeklyPlan.days[dayIndex].recipeId = null;
+    if (State.weeklyPlan.days[dayIndex].recipeIds) {
+        State.weeklyPlan.days[dayIndex].recipeIds[slotIndex] = null;
+    }
+    if (slotIndex === 0) {
+        State.weeklyPlan.days[dayIndex].recipeId = null;
+    }
 
-    // 3. Immediately re-render
     State.renderAll();
 
-    // 4. Save to API in background
     try {
         await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
+        showToast("Recipe removed from plan.", "success");
     } catch (err) {
-        // 5. Rollback on failure
         showToast("Failed to remove recipe. Changes rolled back.", "error");
         State.weeklyPlan = fallbackPlan;
         State.renderAll();
@@ -1510,27 +1711,7 @@ async function removeRecipeFromPlan(dayIndex) {
 }
 
 async function clearWeeklyPlan() {
-    const ok = confirm("Clear all planned dinners for this week?");
-    if (!ok) return;
-
-    // 1. Fallback for rollback
-    const fallbackPlan = structuredClone(State.weeklyPlan);
-
-    // 2. Mutate state optimistically
-    State.weeklyPlan = structuredClone(defaultWeeklyPlan);
-
-    // 3. Immediately re-render
-    State.renderAll();
-
-    // 4. Save to API in background
-    try {
-        await API.saveWeeklyPlan(State.weeklyPlan.weekLabel, State.weeklyPlan.days);
-    } catch (err) {
-        // 5. Rollback on failure
-        showToast("Failed to clear week plan. Changes rolled back.", "error");
-        State.weeklyPlan = fallbackPlan;
-        State.renderAll();
-    }
+    await confirmAndClearWeekPlan();
 }
 
 // =========================
@@ -2754,7 +2935,7 @@ async function syncAllData() {
         if (logoutBtn) logoutBtn.style.display = "block";
 
         // 2. Fetch all data in parallel
-        const [plan, inventoryList, staplesList, recipesList, checkedList, householdRes, favouritesList] = await Promise.all([
+        const [plan, inventoryList, staplesList, recipesList, checkedList, householdRes, favouritesList, preferencesRes] = await Promise.all([
             API.getWeeklyPlan(State.weeklyPlan.weekLabel),
             API.getInventory(),
             API.getStaples(),
@@ -2767,6 +2948,10 @@ async function syncAllData() {
             API.getFavourites().catch(err => {
                 console.log("No favourites setup yet:", err);
                 return [];
+            }),
+            API.getPreferences().catch(err => {
+                console.log("No preferences setup yet:", err);
+                return { preferred_supermarket: "Tesco", show_staples_in_list: true };
             })
         ]);
 
@@ -2776,7 +2961,38 @@ async function syncAllData() {
         }
 
         // Store into centralised State
-        State.weeklyPlan = plan || structuredClone(defaultWeeklyPlan);
+        if (plan && plan.days) {
+            const parsedDays = [
+                "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+            ].map(day => ({
+                day,
+                recipeId: null,
+                recipeIds: [null, null, null, null, null]
+            }));
+
+            plan.days.forEach(item => {
+                const parts = item.day.split("-");
+                const dayName = parts[0];
+                const slotIndex = parts[1] ? parseInt(parts[1]) : 0;
+                const dayObj = parsedDays.find(d => d.day === dayName);
+                if (dayObj) {
+                    if (slotIndex >= 0 && slotIndex < 5) {
+                        dayObj.recipeIds[slotIndex] = item.recipeId;
+                        if (slotIndex === 0) {
+                            dayObj.recipeId = item.recipeId;
+                        }
+                    }
+                }
+            });
+            State.weeklyPlan = { weekLabel: plan.weekLabel, days: parsedDays };
+        } else {
+            const defaultPlan = structuredClone(defaultWeeklyPlan);
+            defaultPlan.days.forEach(d => {
+                d.recipeIds = [null, null, null, null, null];
+            });
+            State.weeklyPlan = defaultPlan;
+        }
+
         State.inventory = inventoryList || [];
         State.staples = staplesList || [];
         State.shoppingChecks = checkedList.reduce((acc, c) => {
@@ -2785,6 +3001,12 @@ async function syncAllData() {
         }, {});
         State.household = householdRes;
         State.favourites = favouritesList || [];
+        State.preferences = preferencesRes || { preferred_supermarket: "Tesco", show_staples_in_list: true };
+
+        // Apply preferred supermarket label
+        if (State.preferences && typeof updateSupermarketLabels === "function") {
+            updateSupermarketLabels(State.preferences.preferred_supermarket || "Tesco");
+        }
 
         // Toggle Settings button in header
         const settingsBtn = document.getElementById("settingsBtn");
@@ -3371,3 +3593,283 @@ window.addSelectedStarterPacks = async function() {
         alert(`Failed to add starter packs: ${err.message}`);
     }
 };
+
+// ==========================================
+// 8. SETTINGS & PREFERENCES LOGIC
+// ==========================================
+
+function getSlotNames(count) {
+    if (count === 1) return ["Dinner"];
+    if (count === 2) return ["Lunch", "Dinner"];
+    if (count === 3) return ["Breakfast", "Lunch", "Dinner"];
+    if (count === 4) return ["Breakfast", "Lunch", "Snack", "Dinner"];
+    return ["Breakfast", "Snack 1", "Lunch", "Snack 2", "Dinner"];
+}
+
+window.renderAccentSwatches = function() {
+    const container = document.getElementById("accentSwatchesContainer");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    const currentAccent = localStorage.getItem("accentColor") || "ocean";
+    
+    Object.entries(ACCENT_PALETTES).forEach(([key, value]) => {
+        const swatch = document.createElement("div");
+        swatch.className = `accent-swatch ${key === currentAccent ? "active" : ""}`;
+        swatch.style.backgroundColor = value.primary;
+        swatch.title = key.charAt(0).toUpperCase() + key.slice(1);
+        swatch.onclick = () => {
+            localStorage.setItem("accentColor", key);
+            applyAccentColor();
+            renderAccentSwatches();
+            showToast(`Applied ${swatch.title} accent colour!`, "success");
+        };
+        container.appendChild(swatch);
+    });
+};
+
+window.initSettingsPage = async function() {
+    renderAccentSwatches();
+    
+    // Theme Selector
+    const themeSelector = document.getElementById("themeSelector");
+    if (themeSelector) {
+        themeSelector.value = localStorage.getItem("theme") || "System";
+        themeSelector.onchange = () => {
+            localStorage.setItem("theme", themeSelector.value);
+            applyTheme();
+            showToast(`Theme changed to ${themeSelector.value}`, "success");
+        };
+    }
+
+    // Card Density Toggles
+    const densityToggles = document.getElementsByName("densityToggle");
+    const currentDensity = localStorage.getItem("density") || "comfortable";
+    densityToggles.forEach(toggle => {
+        toggle.checked = (toggle.value === currentDensity);
+        toggle.onchange = () => {
+            if (toggle.checked) {
+                localStorage.setItem("density", toggle.value);
+                applyDensity();
+                showToast(`Layout density set to ${toggle.value}`, "success");
+            }
+        };
+    });
+
+    // Week Starts On
+    const weekStartToggles = document.getElementsByName("weekStartToggle");
+    const currentWeekStart = localStorage.getItem("weekStartDay") || "Monday";
+    weekStartToggles.forEach(toggle => {
+        toggle.checked = (toggle.value === currentWeekStart);
+        toggle.onchange = () => {
+            if (toggle.checked) {
+                localStorage.setItem("weekStartDay", toggle.value);
+                populateMealPlans();
+                showToast(`Week starts on ${toggle.value}`, "success");
+            }
+        };
+    });
+
+    // Meals Per Day
+    const mealsPerDayInput = document.getElementById("mealsPerDayInput");
+    if (mealsPerDayInput) {
+        mealsPerDayInput.value = localStorage.getItem("mealsPerDay") || "1";
+        mealsPerDayInput.onchange = () => {
+            const val = parseInt(mealsPerDayInput.value);
+            if (isNaN(val) || val < 1 || val > 5) {
+                alert("Meals per day must be between 1 and 5.");
+                mealsPerDayInput.value = localStorage.getItem("mealsPerDay") || "1";
+                return;
+            }
+            localStorage.setItem("mealsPerDay", val);
+            populateMealPlans();
+            showToast(`Meals per day set to ${val}`, "success");
+        };
+    }
+
+    // Household Summary Info
+    const summaryDiv = document.getElementById("settingsHouseholdSummary");
+    try {
+        const household = await API.getHousehold();
+        State.household = household;
+        if (household && household.members && household.members.length > 0) {
+            const memberNames = household.members.map(m => m.name).join(", ");
+            summaryDiv.innerHTML = `
+                <p style="margin: 0;"><strong>Household:</strong> ${household.members.length} members (${memberNames})</p>
+            `;
+        } else {
+            summaryDiv.innerHTML = `<p style="margin: 0;">No household setup found. Setup via onboarding.</p>`;
+        }
+    } catch (err) {
+        summaryDiv.innerHTML = `<p style="margin: 0; color: var(--color-danger);">Failed to load household details.</p>`;
+    }
+
+    // Preferences Fetch (Supermarket & Staples visibility)
+    try {
+        const prefs = await API.getPreferences();
+        State.preferences = prefs;
+
+        const supermarketSelector = document.getElementById("supermarketSelector");
+        const showStaplesCheckbox = document.getElementById("showStaplesCheckbox");
+
+        if (supermarketSelector) {
+            supermarketSelector.value = prefs.preferred_supermarket || "Tesco";
+            supermarketSelector.onchange = () => {
+                saveServerPreferencesDebounced(supermarketSelector.value, showStaplesCheckbox ? showStaplesCheckbox.checked : true);
+            };
+        }
+
+        if (showStaplesCheckbox) {
+            showStaplesCheckbox.checked = prefs.show_staples_in_list;
+            showStaplesCheckbox.onchange = () => {
+                saveServerPreferencesDebounced(supermarketSelector ? supermarketSelector.value : "Tesco", showStaplesCheckbox.checked);
+            };
+        }
+
+        updateSupermarketLabels(prefs.preferred_supermarket || "Tesco");
+
+    } catch (err) {
+        console.error("Failed to load preferences:", err);
+    }
+};
+
+window.updateSupermarketLabels = function(supermarket) {
+    const titleEl = document.querySelector("#shopping h2");
+    if (titleEl) {
+        titleEl.textContent = `${supermarket} Shopping List`;
+    }
+    const subtitleEl = document.querySelector("#shopping p");
+    if (subtitleEl) {
+        subtitleEl.textContent = `Ready to order online • Based on ${supermarket} prices • Week of Feb 3–9, 2026`;
+    }
+};
+
+let preferencesTimeout = null;
+window.saveServerPreferencesDebounced = function(supermarket, showStaples) {
+    if (preferencesTimeout) clearTimeout(preferencesTimeout);
+    
+    const saveIndicator = document.getElementById("pref-save-indicator");
+    if (saveIndicator) {
+        saveIndicator.textContent = "Saving...";
+        saveIndicator.style.opacity = "1";
+    }
+    
+    preferencesTimeout = setTimeout(async () => {
+        try {
+            await API.updatePreferences({
+                preferred_supermarket: supermarket,
+                show_staples_in_list: showStaples
+            });
+            
+            State.preferences = {
+                preferred_supermarket: supermarket,
+                show_staples_in_list: showStaples
+            };
+            
+            recomputeShoppingData();
+            updateSupermarketLabels(supermarket);
+            
+            if (saveIndicator) {
+                saveIndicator.textContent = "Saved ✓";
+                setTimeout(() => {
+                    if (saveIndicator.textContent === "Saved ✓") {
+                        saveIndicator.style.opacity = "0";
+                    }
+                }, 1500);
+            }
+        } catch (err) {
+            console.error("Failed to save preferences:", err);
+            if (saveIndicator) {
+                saveIndicator.textContent = "Error saving";
+            }
+        }
+    }, 500);
+};
+
+// ==========================================
+// 8.1 DANGER ZONE OPERATIONS
+// ==========================================
+
+window.confirmDeleteAllCustomRecipes = async function() {
+    const confirmed = confirm("Are you absolutely sure you want to delete ALL your custom recipes? This action is permanent and cannot be undone.");
+    if (!confirmed) return;
+    
+    try {
+        await API.deleteCustomRecipes();
+        showToast("Wiped all custom recipes.", "success");
+        await syncAllData();
+    } catch (err) {
+        alert(`Failed to delete custom recipes: ${err.message}`);
+    }
+};
+
+window.confirmResetHousehold = async function() {
+    const confirmed = confirm("Are you absolutely sure you want to reset your household? All members and macro targets will be cleared. This cannot be undone.");
+    if (!confirmed) return;
+    
+    try {
+        await API.resetHousehold();
+        showToast("Household details reset successfully.", "success");
+        await syncAllData();
+    } catch (err) {
+        alert(`Failed to reset household: ${err.message}`);
+    }
+};
+
+window.openDeleteAccountModal = function() {
+    const modal = document.getElementById("deleteAccountModal");
+    const input = document.getElementById("deleteAccountConfirmInput");
+    const btn = document.getElementById("deleteAccountConfirmBtn");
+    
+    if (!modal || !input || !btn) return;
+    
+    input.value = "";
+    btn.disabled = true;
+    
+    input.oninput = () => {
+        btn.disabled = (input.value.trim() !== "DELETE");
+    };
+    
+    modal.classList.add("active");
+};
+
+window.closeDeleteAccountModal = function() {
+    const modal = document.getElementById("deleteAccountModal");
+    if (modal) modal.classList.remove("active");
+};
+
+window.handleDeleteAccount = async function() {
+    try {
+        await API.deleteAccount();
+        showToast("Account deleted successfully. Goodbye!", "success");
+        closeDeleteAccountModal();
+        window.location.reload();
+    } catch (err) {
+        alert(`Failed to delete account: ${err.message}`);
+    }
+};
+
+window.confirmAndClearWeekPlan = async function() {
+    const confirmed = confirm("This will remove all meals from your current week plan. This cannot be undone. Are you sure?");
+    if (!confirmed) return;
+    
+    const fallbackPlan = structuredClone(State.weeklyPlan);
+    
+    // Clear locally
+    State.weeklyPlan.days.forEach(d => {
+        d.recipeId = null;
+        d.recipeIds = [null, null, null, null, null];
+    });
+    
+    State.renderAll();
+    
+    try {
+        await API.deleteWeeklyPlan(State.weeklyPlan.weekLabel);
+        showToast("Weekly plan cleared successfully.", "success");
+    } catch (err) {
+        showToast("Failed to clear weekly plan. Changes rolled back.", "error");
+        State.weeklyPlan = fallbackPlan;
+        State.renderAll();
+    }
+};
+
