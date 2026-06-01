@@ -259,20 +259,6 @@ function setupRecipeCardIngredientsAndWarnings(card, recipe, portionsContainer, 
     if (servingInfo.clamped) {
         const badge = document.createElement("div");
         badge.className = "clamp-warning-badge";
-        badge.style.cssText = `
-            background: rgba(245, 158, 11, 0.12);
-            border: 1px solid rgba(245, 158, 11, 0.25);
-            color: #fbbf24;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-top: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            width: fit-content;
-        `;
         badge.innerHTML = `⚠️ Scaled to ${servingInfo.servings} servings (${servingInfo.clampType})`;
         portionsContainer.parentNode.insertBefore(badge, portionsContainer.nextSibling);
     }
@@ -285,32 +271,11 @@ function setupRecipeCardIngredientsAndWarnings(card, recipe, portionsContainer, 
     
     collapsibleBtn = document.createElement("button");
     collapsibleBtn.className = "btn-secondary toggle-card-ingredients";
-    collapsibleBtn.style.cssText = `
-        width: 100%;
-        margin-top: 8px;
-        font-size: 11px;
-        padding: 6px 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 6px;
-    `;
     collapsibleBtn.innerHTML = `<span>🧑‍🍳 Ingredients (${(recipe.ingredients || []).length})</span><span class="toggle-icon">▼</span>`;
     
     collapsibleList = document.createElement("div");
     collapsibleList.className = "card-ingredients-list";
-    collapsibleList.style.cssText = `
-        display: none;
-        background: rgba(0, 0, 0, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 6px;
-        padding: 10px;
-        margin-top: 4px;
-        max-height: 180px;
-        overflow-y: auto;
-        text-align: left;
-        font-size: 11px;
-    `;
+    collapsibleList.style.display = "none";
     
     collapsibleBtn.onclick = (e) => {
         e.stopPropagation();
@@ -1151,7 +1116,7 @@ function renderRecipePortions(container, recipe) {
 
     const members = State.household ? State.household.members : [];
     if (members.length === 0) {
-        container.innerHTML = `<span style="color: var(--color-text-light); font-size: 11px; padding: 6px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; display: inline-block;">Set up your household in Settings to see portions</span>`;
+        container.innerHTML = `<span class="setup-household-notice">Set up your household in Settings to see portions</span>`;
         return;
     }
 
@@ -1171,23 +1136,11 @@ function renderRecipePortions(container, recipe) {
     splits.forEach(split => {
         const card = document.createElement("div");
         card.className = "portion-card";
-        card.style.cssText = `
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 110px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        `;
 
         const labelText = members.length > 1 ? `<strong>👤 ${split.name}:</strong> ` : "";
         card.innerHTML = `
             <div>${labelText}${split.macros.calories} kcal</div>
-            <div style="color: rgba(255,255,255,0.6); font-size: 10px; white-space: nowrap;">
+            <div class="portion-card-sub">
                 ${split.macros.protein_g}g P • ${split.macros.carbs_g}g C • ${split.macros.fat_g}g F
             </div>
         `;
