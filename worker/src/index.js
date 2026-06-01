@@ -135,14 +135,14 @@ async function seedRecipesIfEmpty(db) {
 
 async function seedStaplesIfEmpty(db, userId) {
   try {
-    const count = await db.prepare("SELECT COUNT(*) as cnt FROM weekly_staples WHERE user_id = ?").bind(userId).first("cnt");
+    const count = await db.prepare("SELECT COUNT(*) as cnt FROM staples WHERE user_id = ?").bind(userId).first("cnt");
     if (count === 0) {
-      console.log("Seeding weekly staples for user:", userId);
+      console.log("Seeding staples for user:", userId);
       const statements = [];
       for (const s of defaultStaples) {
         statements.push(
           db.prepare(
-            "INSERT INTO weekly_staples (id, user_id, name, quantity, unit, category) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO staples (id, user_id, name, quantity, unit, category) VALUES (?, ?, ?, ?, ?, ?)"
           ).bind(
             s.id,
             userId,
@@ -958,14 +958,15 @@ export default {
       // 3. Pantry/Inventory CRUD
       if (path === "/api/inventory") {
         if (method === "GET") {
-          const items = await db.prepare("SELECT * FROM inventory_items WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+          const items = await db.prepare("SELECT * FROM food_inventory WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
           const results = items.results.map(i => ({
             id: i.id,
             name: i.name,
             quantity: i.quantity,
             unit: i.unit,
             category: i.category,
-            dateAdded: i.date_added
+            expires_at: i.expires_at,
+            created_at: i.created_at
           }));
           return new Response(JSON.stringify(results), { status: 200, headers: corsHeaders });
         }
@@ -977,7 +978,7 @@ export default {
           }
 
           await db.prepare(
-            "INSERT OR REPLACE INTO inventory_items (id, user_id, name, quantity, unit, category, date_added) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO food_inventory (id, user_id, name, quantity, unit, category, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, name) DO UPDATE SET quantity = excluded.quantity, unit = excluded.unit, category = excluded.category, expires_at = excluded.expires_at"
           ).bind(
             item.id,
             userId,
@@ -985,26 +986,79 @@ export default {
             Number(item.quantity) || 0,
             item.unit,
             item.category,
-            item.dateAdded || new Date().toISOString()
+            item.expires_at || null,
+            item.created_at || new Date().toISOString()
           ).run();
 
           return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
         }
       }
 
+      // Bulk Inventory POST
+      if (method === "POST" && path === "/api/inventory/bulk") {
+        const list = await request.json();
+        if (!Array.isArray(list)) {
+          return new Response(JSON.stringify({ error: "Expected an array of inventory items." }), { status: 400, headers: corsHeaders });
+        }
+
+        const statements = [];
+        for (const i of list) {
+          const id = i.id || `inv-${crypto.randomUUID()}`;
+          const qty = Number(i.quantity) || 0;
+          const unit = String(i.unit || "unit");
+          const expires_at = i.expires_at || null;
+          const created_at = i.created_at || new Date().toISOString();
+
+          statements.push(
+            db.prepare(`
+              INSERT INTO food_inventory (id, user_id, name, category, quantity, unit, expires_at, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(user_id, name) DO UPDATE SET
+                quantity = excluded.quantity,
+                unit = excluded.unit,
+                category = excluded.category,
+                expires_at = COALESCE(excluded.expires_at, food_inventory.expires_at),
+                created_at = COALESCE(excluded.created_at, food_inventory.created_at)
+            `).bind(id, userId, i.name, i.category, qty, unit, expires_at, created_at)
+          );
+        }
+
+        if (statements.length > 0) {
+          await db.batch(statements);
+        }
+        return new Response(JSON.stringify({ success: true, count: list.length }), { status: 200, headers: corsHeaders });
+      }
+
+      // Update Inventory Item
+      if (method === "PUT" && path.startsWith("/api/inventory/")) {
+        const id = path.split("/").pop();
+        const body = await request.json();
+        const qty = Number(body.quantity) || 0;
+        const expires_at = body.expires_at || null;
+
+        const result = await db.prepare(
+          "UPDATE food_inventory SET name = ?, category = ?, quantity = ?, unit = ?, expires_at = ? WHERE id = ? AND user_id = ?"
+        ).bind(body.name, body.category, qty, body.unit, expires_at, id, userId).run();
+
+        if (result.meta.changes === 0) {
+          return new Response(JSON.stringify({ error: "Inventory item not found or unauthorized." }), { status: 404, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+      }
+
       // Delete Inventory Item
       if (method === "DELETE" && path.startsWith("/api/inventory/")) {
         const itemId = path.split("/").pop();
         if (itemId) {
-          await db.prepare("DELETE FROM inventory_items WHERE id = ? AND user_id = ?").bind(itemId, userId).run();
+          await db.prepare("DELETE FROM food_inventory WHERE id = ? AND user_id = ?").bind(itemId, userId).run();
           return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
         }
       }
 
-      // 4. Weekly Staples CRUD
+      // 4. Staples CRUD
       if (path === "/api/staples") {
         if (method === "GET") {
-          const items = await db.prepare("SELECT * FROM weekly_staples WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+          const items = await db.prepare("SELECT * FROM staples WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
           return new Response(JSON.stringify(items.results), { status: 200, headers: corsHeaders });
         }
 
@@ -1014,28 +1068,328 @@ export default {
             return new Response(JSON.stringify({ error: "Invalid staple payload." }), { status: 400, headers: corsHeaders });
           }
 
+          const qty = staple.quantity !== undefined && staple.quantity !== null && staple.quantity !== "" ? Number(staple.quantity) : null;
+          const unit = staple.unit !== undefined && staple.unit !== null && staple.unit !== "" ? String(staple.unit) : null;
+
           await db.prepare(
-            "INSERT OR REPLACE INTO weekly_staples (id, user_id, name, quantity, unit, category) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO staples (id, user_id, name, category, quantity, unit) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, name) DO UPDATE SET quantity = excluded.quantity, unit = excluded.unit, category = excluded.category"
           ).bind(
             staple.id,
             userId,
             staple.name,
-            Number(staple.quantity) || 0,
-            staple.unit,
-            staple.category
+            staple.category,
+            qty,
+            unit
           ).run();
 
           return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
         }
       }
 
+      // Bulk Staples POST
+      if (method === "POST" && path === "/api/staples/bulk") {
+        const list = await request.json();
+        if (!Array.isArray(list)) {
+          return new Response(JSON.stringify({ error: "Expected an array of staples." }), { status: 400, headers: corsHeaders });
+        }
+
+        const statements = [];
+        for (const s of list) {
+          const id = s.id || `staple-${crypto.randomUUID()}`;
+          const qty = s.quantity !== undefined && s.quantity !== null && s.quantity !== "" ? Number(s.quantity) : null;
+          const unit = s.unit !== undefined && s.unit !== null && s.unit !== "" ? String(s.unit) : null;
+
+          statements.push(
+            db.prepare(`
+              INSERT INTO staples (id, user_id, name, category, quantity, unit)
+              VALUES (?, ?, ?, ?, ?, ?)
+              ON CONFLICT(user_id, name) DO UPDATE SET
+                quantity = excluded.quantity,
+                unit = excluded.unit,
+                category = excluded.category
+            `).bind(id, userId, s.name, s.category, qty, unit)
+          );
+        }
+
+        if (statements.length > 0) {
+          await db.batch(statements);
+        }
+        return new Response(JSON.stringify({ success: true, count: list.length }), { status: 200, headers: corsHeaders });
+      }
+
+      // Update Staple Item
+      if (method === "PUT" && path.startsWith("/api/staples/")) {
+        const id = path.split("/").pop();
+        const body = await request.json();
+        const qty = body.quantity !== undefined && body.quantity !== null && body.quantity !== "" ? Number(body.quantity) : null;
+        const unit = body.unit !== undefined && body.unit !== null && body.unit !== "" ? String(body.unit) : null;
+
+        const result = await db.prepare(
+          "UPDATE staples SET name = ?, category = ?, quantity = ?, unit = ? WHERE id = ? AND user_id = ?"
+        ).bind(body.name, body.category, qty, unit, id, userId).run();
+
+        if (result.meta.changes === 0) {
+          return new Response(JSON.stringify({ error: "Staple not found or unauthorized." }), { status: 404, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
+      }
+
       // Delete Staple Item
       if (method === "DELETE" && path.startsWith("/api/staples/")) {
         const stapleId = path.split("/").pop();
         if (stapleId) {
-          await db.prepare("DELETE FROM weekly_staples WHERE id = ? AND user_id = ?").bind(stapleId, userId).run();
+          await db.prepare("DELETE FROM staples WHERE id = ? AND user_id = ?").bind(stapleId, userId).run();
           return new Response(JSON.stringify({ success: true }), { status: 200, headers: corsHeaders });
         }
+      }
+
+      // Export APIs
+      if (method === "GET" && path === "/api/export") {
+        const staples = await db.prepare("SELECT * FROM staples WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+        const inventory = await db.prepare("SELECT * FROM food_inventory WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+
+        const recipes = await db.prepare(`
+          SELECT r.*,
+                 (SELECT json_group_array(json_object(
+                    'id', ri.id,
+                    'name', ri.name,
+                    'quantity_per_serving', ri.quantity_per_serving,
+                    'unit', ri.unit,
+                    'notes', ri.notes,
+                    'category', ri.category
+                 )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+          FROM recipes r
+          WHERE r.is_custom = 1 AND r.created_by_user_id = ?
+          ORDER BY r.name ASC
+        `).bind(userId).all();
+
+        const custom_recipes = recipes.results.map(r => ({
+          id: r.id,
+          name: r.name,
+          emoji: r.emoji,
+          description: r.description,
+          prepTime: r.prep_time,
+          cookTime: r.cook_time,
+          servings: r.servings,
+          min_servings: r.min_servings,
+          max_servings: r.max_servings,
+          ingredients: JSON.parse(r.ingredients_json || "[]"),
+          instructions: JSON.parse(r.instructions || "[]"),
+          tips: r.tips || "",
+          macros: JSON.parse(r.macros || "{}"),
+          is_custom: true,
+          created_by_user_id: r.created_by_user_id,
+          estimated_cost_per_serving_gbp: r.estimated_cost_per_serving_gbp,
+          tags: JSON.parse(r.tags || "[]")
+        }));
+
+        return new Response(JSON.stringify({
+          version: "1.0",
+          exported_at: new Date().toISOString(),
+          staples: staples.results.map(s => ({
+            id: s.id,
+            name: s.name,
+            category: s.category,
+            quantity: s.quantity,
+            unit: s.unit
+          })),
+          inventory: inventory.results.map(i => ({
+            id: i.id,
+            name: i.name,
+            category: i.category,
+            quantity: i.quantity,
+            unit: i.unit,
+            expires_at: i.expires_at,
+            created_at: i.created_at
+          })),
+          custom_recipes
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      if (method === "GET" && path === "/api/export/staples.csv") {
+        const staples = await db.prepare("SELECT * FROM staples WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+        let csv = "name,category,quantity,unit\n";
+        for (const s of staples.results) {
+          const name = s.name.includes(",") || s.name.includes('"') ? `"${s.name.replace(/"/g, '""')}"` : s.name;
+          const qty = s.quantity !== null ? s.quantity : "";
+          const unit = s.unit !== null ? s.unit : "";
+          csv += `${name},${s.category},${qty},${unit}\n`;
+        }
+
+        return new Response(csv, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "text/csv",
+            "Content-Disposition": 'attachment; filename="staples.csv"'
+          }
+        });
+      }
+
+      if (method === "GET" && path === "/api/export/inventory.csv") {
+        const inventory = await db.prepare("SELECT * FROM food_inventory WHERE user_id = ? ORDER BY name ASC").bind(userId).all();
+        let csv = "name,category,quantity,unit\n";
+        for (const i of inventory.results) {
+          const name = i.name.includes(",") || i.name.includes('"') ? `"${i.name.replace(/"/g, '""')}"` : i.name;
+          csv += `${name},${i.category},${i.quantity},${i.unit}\n`;
+        }
+
+        return new Response(csv, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "text/csv",
+            "Content-Disposition": 'attachment; filename="inventory.csv"'
+          }
+        });
+      }
+
+      // Import JSON API
+      if (method === "POST" && path === "/api/import") {
+        const body = await request.json();
+        if (!body || body.version !== "1.0") {
+          return new Response(JSON.stringify({ error: "Invalid backup file: Unsupported version. Only version '1.0' is supported." }), {
+            status: 400,
+            headers: corsHeaders
+          });
+        }
+
+        const statements = [];
+        let staplesCount = 0;
+        let inventoryCount = 0;
+        let recipesCount = 0;
+
+        // 1. Staples
+        if (Array.isArray(body.staples)) {
+          staplesCount = body.staples.length;
+          for (const s of body.staples) {
+            const id = s.id || `staple-${crypto.randomUUID()}`;
+            const qty = s.quantity !== undefined && s.quantity !== null && s.quantity !== "" ? Number(s.quantity) : null;
+            const unit = s.unit !== undefined && s.unit !== null && s.unit !== "" ? String(s.unit) : null;
+
+            statements.push(
+              db.prepare(`
+                INSERT INTO staples (id, user_id, name, category, quantity, unit)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(user_id, name) DO UPDATE SET
+                  quantity = excluded.quantity,
+                  unit = excluded.unit,
+                  category = excluded.category
+              `).bind(id, userId, s.name, s.category, qty, unit)
+            );
+          }
+        }
+
+        // 2. Inventory
+        if (Array.isArray(body.inventory)) {
+          inventoryCount = body.inventory.length;
+          for (const i of body.inventory) {
+            const id = i.id || `inv-${crypto.randomUUID()}`;
+            const qty = Number(i.quantity) || 0;
+            const unit = String(i.unit || "unit");
+            const expires_at = i.expires_at || null;
+            const created_at = i.created_at || new Date().toISOString();
+
+            statements.push(
+              db.prepare(`
+                INSERT INTO food_inventory (id, user_id, name, category, quantity, unit, expires_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(user_id, name) DO UPDATE SET
+                  quantity = excluded.quantity,
+                  unit = excluded.unit,
+                  category = excluded.category,
+                  expires_at = COALESCE(excluded.expires_at, food_inventory.expires_at),
+                  created_at = COALESCE(excluded.created_at, food_inventory.created_at)
+              `).bind(id, userId, i.name, i.category, qty, unit, expires_at, created_at)
+            );
+          }
+        }
+
+        // 3. Recipes
+        if (Array.isArray(body.custom_recipes)) {
+          recipesCount = body.custom_recipes.length;
+          for (const r of body.custom_recipes) {
+            const recipeId = r.id;
+
+            statements.push(
+              db.prepare(`
+                INSERT INTO recipes (
+                  id, name, emoji, description, prep_time, cook_time, servings, 
+                  ingredients, instructions, tips, macros, min_servings, max_servings, 
+                  is_custom, created_by_user_id, estimated_cost_per_serving_gbp, tags
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  name = excluded.name,
+                  emoji = excluded.emoji,
+                  description = excluded.description,
+                  prep_time = excluded.prep_time,
+                  cook_time = excluded.cook_time,
+                  servings = excluded.servings,
+                  ingredients = excluded.ingredients,
+                  instructions = excluded.instructions,
+                  tips = excluded.tips,
+                  macros = excluded.macros,
+                  min_servings = excluded.min_servings,
+                  max_servings = excluded.max_servings,
+                  is_custom = 1,
+                  created_by_user_id = ?,
+                  estimated_cost_per_serving_gbp = excluded.estimated_cost_per_serving_gbp,
+                  tags = excluded.tags
+              `).bind(
+                recipeId,
+                r.name,
+                r.emoji || "🍳",
+                r.description || "",
+                r.prepTime || "0 min",
+                r.cookTime || "0 min",
+                r.servings || 2,
+                JSON.stringify(r.ingredients || []),
+                JSON.stringify(r.instructions || []),
+                r.tips || "",
+                JSON.stringify(r.macros || {}),
+                r.min_servings !== undefined ? r.min_servings : null,
+                r.max_servings !== undefined ? r.max_servings : null,
+                userId,
+                r.estimated_cost_per_serving_gbp !== undefined ? r.estimated_cost_per_serving_gbp : null,
+                JSON.stringify(r.tags || []),
+                userId
+              )
+            );
+
+            statements.push(
+              db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(recipeId)
+            );
+
+            if (Array.isArray(r.ingredients)) {
+              for (const ing of r.ingredients) {
+                statements.push(
+                  db.prepare(`
+                    INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                  `).bind(
+                    recipeId,
+                    ing.name,
+                    Number(ing.quantity_per_serving),
+                    ing.unit,
+                    ing.notes || null,
+                    ing.category
+                  )
+                );
+              }
+            }
+          }
+        }
+
+        if (statements.length > 0) {
+          await db.batch(statements);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          staplesCount,
+          inventoryCount,
+          recipesCount
+        }), { status: 200, headers: corsHeaders });
       }
 
       // 5. Shopping Checked State Tracking

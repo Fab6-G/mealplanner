@@ -134,9 +134,23 @@ const API = {
     });
   },
 
+  async updateInventoryItem(id, item) {
+    return this.request(`/api/inventory/${id}`, {
+      method: "PUT",
+      body: item
+    });
+  },
+
   async deleteInventoryItem(id) {
     return this.request(`/api/inventory/${id}`, {
       method: "DELETE"
+    });
+  },
+
+  async bulkSaveInventory(items) {
+    return this.request("/api/inventory/bulk", {
+      method: "POST",
+      body: items
     });
   },
 
@@ -152,9 +166,31 @@ const API = {
     });
   },
 
+  async updateStapleItem(id, staple) {
+    return this.request(`/api/staples/${id}`, {
+      method: "PUT",
+      body: staple
+    });
+  },
+
   async deleteStapleItem(id) {
     return this.request(`/api/staples/${id}`, {
       method: "DELETE"
+    });
+  },
+
+  async bulkSaveStaples(staples) {
+    return this.request("/api/staples/bulk", {
+      method: "POST",
+      body: staples
+    });
+  },
+
+  // Backup Import
+  async importBackup(data) {
+    return this.request("/api/import", {
+      method: "POST",
+      body: data
     });
   },
 

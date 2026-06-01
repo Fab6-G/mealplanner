@@ -83,6 +83,7 @@ const State = {
         populateRecipesTab();
         renderInventory();
         renderStaples();
+        renderStarterPacks();
         recomputeShoppingData();
         renderDashboardOverview();
         restoreShoppingCheckboxes();
@@ -2452,11 +2453,8 @@ function showOnboardingOverlay() {
                 renderStep();
             };
 
-            document.getElementById("step3Form").onsubmit = async (e) => {
+            document.getElementById("step3Form").onsubmit = (e) => {
                 e.preventDefault();
-                const submitBtn = document.getElementById("onboardingSubmitBtn");
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = "0.7";
 
                 const caloriesVals = Array.from(card.querySelectorAll(".macro-calories")).map(el => parseInt(el.value));
                 const proteinVals = Array.from(card.querySelectorAll(".macro-protein")).map(el => parseFloat(el.value));
@@ -2472,13 +2470,87 @@ function showOnboardingOverlay() {
                     };
                 }
 
+                currentStep = 4;
+                renderStep();
+            };
+        }
+        else if (currentStep === 4) {
+            let packsHtml = "";
+            STARTER_PACKS.forEach((pack, idx) => {
+                const previewNames = pack.items.slice(0, 3).map(i => i.name).join(", ");
+                packsHtml += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: #fff; font-size: 14px;">${pack.name}</strong>
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #10b981; margin: 0;">
+                                <input type="checkbox" class="onboarding-pack-checkbox" data-index="${idx}" style="width: 16px; height: 16px; margin: 0;" /> Select
+                            </label>
+                        </div>
+                        <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.6);">${pack.description}</p>
+                        <span style="font-size: 11px; color: rgba(255,255,255,0.4);">Preview: ${previewNames}...</span>
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <h3 style="margin-top: 0; margin-bottom: 10px; font-weight: 600; color: #10b981;">Step 4: Select Starter Packs (Optional)</h3>
+                <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 20px;">Instantly stock your pantry with standard items. You can choose none, one, or more.</p>
+                
+                <form id="step4Form">
+                    <div style="max-height: 48vh; overflow-y: auto; padding-right: 5px; margin-bottom: 20px;">
+                        ${packsHtml}
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button type="button" id="step4BackBtn" class="btn-secondary" style="flex: 1; padding: 12px; font-size: 15px;">← Back</button>
+                        <button type="submit" id="onboardingSubmitBtn" class="btn-success" style="flex: 2; padding: 12px; font-size: 15px; font-weight: 700;">Complete Setup & Start Planning! 🎉</button>
+                    </div>
+                </form>
+            `;
+
+            document.getElementById("step4BackBtn").onclick = () => {
+                currentStep = 3;
+                renderStep();
+            };
+
+            document.getElementById("step4Form").onsubmit = async (e) => {
+                e.preventDefault();
+                const submitBtn = document.getElementById("onboardingSubmitBtn");
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.7";
+
                 try {
+                    // 1. Setup household
                     await API.setupHousehold({ members: membersData });
+
+                    // 2. Add selected starter packs staples
+                    const selectedChecks = card.querySelectorAll(".onboarding-pack-checkbox:checked");
+                    const staplesToSave = [];
+                    selectedChecks.forEach(cb => {
+                        const packIndex = parseInt(cb.dataset.index);
+                        const pack = STARTER_PACKS[packIndex];
+                        if (pack) {
+                            pack.items.forEach(item => {
+                                staplesToSave.push({
+                                    id: `staple-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                                    name: item.name,
+                                    category: item.category,
+                                    quantity: item.quantity,
+                                    unit: item.unit
+                                });
+                            });
+                        }
+                    });
+
+                    if (staplesToSave.length > 0) {
+                        await API.bulkSaveStaples(staplesToSave);
+                    }
+
                     hideOnboardingOverlay();
                     showToast("Household setup complete! Welcome to your Dashboard.", "success");
                     await syncAllData();
                 } catch (err) {
-                    alert(`Failed to save household: ${err.message}`);
+                    alert(`Failed to complete onboarding: ${err.message}`);
                     submitBtn.disabled = false;
                     submitBtn.style.opacity = "1";
                 }
@@ -2626,6 +2698,22 @@ window.showSettingsModal = function() {
 
         container.appendChild(form);
     });
+
+    // Also display a button to trigger Starter Packs from Settings
+    const starterPackBtn = document.createElement("button");
+    starterPackBtn.className = "btn-secondary";
+    starterPackBtn.textContent = "📦 Open Starter Packs Onboarding";
+    starterPackBtn.style.cssText = "width: 100%; padding: 12px; margin-top: 10px; font-weight: 600; border-color: var(--color-primary); color: var(--color-primary);";
+    starterPackBtn.onclick = () => {
+        closeSettingsModal();
+        const staplesTabBtn = document.querySelector(".tab-btn[data-tab='staples']");
+        if (staplesTabBtn) {
+            staplesTabBtn.click();
+            const grid = document.getElementById("starterPacksGrid");
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+    container.appendChild(starterPackBtn);
 
     modal.classList.add("active");
 };
@@ -2809,9 +2897,477 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Initial server sync
     await syncAllData();
 
-    // Dynamic focus synching for multi-device freshness
-    window.addEventListener("focus", async () => {
-        console.log("Window focused - synchronizing state in background...");
-        await syncAllData();
-    });
 });
+
+// ==========================================
+// CSV / JSON IMPORT & EXPORT UTILITIES
+// ==========================================
+
+async function downloadCSV(url, filename) {
+    try {
+        const response = await fetch(url, { credentials: "include" });
+        if (!response.ok) {
+            if (response.status === 401) {
+                API.showLoginOverlay();
+                throw new Error("Unauthorized. Please log in.");
+            }
+            throw new Error("Download failed");
+        }
+        const text = await response.text();
+        const blob = new Blob([text], { type: "text/csv" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        console.error(err);
+        alert(`Failed to download file: ${err.message}`);
+    }
+}
+
+window.exportFullJSONBackup = async function() {
+    try {
+        const data = await API.request("/api/export");
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const date = new Date().toISOString().slice(0, 10);
+        a.download = `mealplanner-backup-${date}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert(`Failed to export backup: ${err.message}`);
+    }
+};
+
+window.exportStaplesCSV = function() {
+    downloadCSV(`${API_BASE_URL}/api/export/staples.csv`, "staples.csv");
+};
+
+window.exportInventoryCSV = function() {
+    downloadCSV(`${API_BASE_URL}/api/export/inventory.csv`, "inventory.csv");
+};
+
+window.triggerJSONImportPicker = function() {
+    document.getElementById("jsonBackupImportPicker").click();
+};
+
+window.triggerStaplesCSVImportPicker = function() {
+    document.getElementById("csvStaplesImportPicker").click();
+};
+
+window.triggerInventoryCSVImportPicker = function() {
+    document.getElementById("csvInventoryImportPicker").click();
+};
+
+window.handleJSONBackupImport = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+        try {
+            const data = JSON.parse(reader.result);
+            if (!data.version || data.version !== "1.0") {
+                alert("Failed to import JSON: Unsupported backup version. Only version '1.0' is supported.");
+                return;
+            }
+
+            const res = await API.importBackup(data);
+            if (res.success) {
+                alert(`Import successful!\nImported: ${res.staplesCount} staples, ${res.inventoryCount} inventory items, ${res.recipesCount} recipes.`);
+                await syncAllData();
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Failed to parse JSON backup. Make sure it's a valid JSON export.");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+};
+
+window.downloadStaplesCSVTemplate = function(event) {
+    if (event) event.preventDefault();
+    const csvContent = "name,category,quantity,unit\nWhole milk,dairy,4,l\nFree range eggs,protein,12,pcs\n";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "staples_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+window.downloadInventoryCSVTemplate = function(event) {
+    if (event) event.preventDefault();
+    const csvContent = "name,category,quantity,unit\nChicken breast fillets,protein,1.5,kg\nBasmati rice,carbs,1,kg\n";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "inventory_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/);
+    if (lines.length === 0) return [];
+    
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
+    const expectedHeaders = ["name", "category", "quantity", "unit"];
+    
+    const missing = expectedHeaders.filter(h => !headers.includes(h));
+    if (missing.length > 0) {
+        throw new Error(`Invalid CSV headers. Missing required columns: ${missing.join(", ")}`);
+    }
+
+    const items = [];
+    for (let idx = 1; idx < lines.length; idx++) {
+        const line = lines[idx].trim();
+        if (!line) continue;
+
+        const values = [];
+        let current = "";
+        let inQuotes = false;
+        for (let charIdx = 0; charIdx < line.length; charIdx++) {
+            const char = line[charIdx];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(current.trim());
+                current = "";
+            } else {
+                current += char;
+            }
+        }
+        values.push(current.trim());
+
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] !== undefined ? values[index].replace(/^"|"$/g, '').trim() : "";
+        });
+
+        if (!row.name) {
+            throw new Error(`Row ${idx + 1}: Name is required.`);
+        }
+        if (!row.category) {
+            throw new Error(`Row ${idx + 1}: Category is required for item "${row.name}".`);
+        }
+        const qty = parseFloat(row.quantity);
+        if (isNaN(qty) || qty <= 0) {
+            throw new Error(`Row ${idx + 1}: Quantity must be a positive number for item "${row.name}".`);
+        }
+        if (!row.unit) {
+            throw new Error(`Row ${idx + 1}: Unit is required for item "${row.name}".`);
+        }
+
+        items.push({
+            name: row.name,
+            category: row.category.toLowerCase(),
+            quantity: qty,
+            unit: row.unit.toLowerCase()
+        });
+    }
+    return items;
+}
+
+let pendingCSVType = "";
+let pendingCSVItems = [];
+
+window.handleCSVImport = function(event, type) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function() {
+        try {
+            const parsed = parseCSV(reader.result);
+            if (parsed.length === 0) {
+                alert("The CSV file is empty.");
+                return;
+            }
+
+            pendingCSVType = type;
+            pendingCSVItems = parsed;
+
+            const modal = document.getElementById("csvPreviewModal");
+            const subtitle = document.getElementById("csvPreviewSubtitle");
+            const tableBody = document.getElementById("csvPreviewTableBody");
+            const confirmBtn = document.getElementById("csvPreviewConfirmBtn");
+
+            subtitle.textContent = `Found ${parsed.length} valid rows for ${type}. Please review them before uploading to D1.`;
+            tableBody.innerHTML = "";
+
+            parsed.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.style.borderBottom = "1px solid var(--color-border)";
+                tr.innerHTML = `
+                    <td style="padding: 10px;">${item.name}</td>
+                    <td style="padding: 10px; text-transform: capitalize;">${item.category}</td>
+                    <td style="padding: 10px; text-align: right;">${item.quantity}</td>
+                    <td style="padding: 10px;">${item.unit}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            confirmBtn.onclick = async () => {
+                confirmBtn.disabled = true;
+                confirmBtn.style.opacity = "0.7";
+                try {
+                    if (pendingCSVType === "staples") {
+                        await API.bulkSaveStaples(pendingCSVItems);
+                        alert(`Successfully uploaded ${pendingCSVItems.length} staples to D1!`);
+                        await syncStaples();
+                        renderStaples();
+                        recomputeShoppingData();
+                    } else {
+                        await API.bulkSaveInventory(pendingCSVItems);
+                        alert(`Successfully uploaded ${pendingCSVItems.length} inventory items to D1!`);
+                        await syncInventory();
+                        renderInventory();
+                    }
+                    closeCSVPreviewModal();
+                } catch (err) {
+                    alert(`Failed to save bulk items: ${err.message}`);
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.style.opacity = "1";
+                }
+            };
+
+            modal.classList.add("active");
+        } catch (e) {
+            console.error(e);
+            alert(`CSV Parsing Error:\n${e.message}`);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+};
+
+window.closeCSVPreviewModal = function() {
+    const modal = document.getElementById("csvPreviewModal");
+    if (modal) modal.classList.remove("active");
+    pendingCSVItems = [];
+    pendingCSVType = "";
+};
+
+// ==========================================
+// STARTER PACKS DEFINITION & ONBOARDING
+// ==========================================
+
+const STARTER_PACKS = [
+    {
+        id: "pack-uk-pantry",
+        name: "🧂 Standard UK Pantry",
+        description: "Oils, vinegars, dried pasta, rice, tinned tomatoes, stock cubes, spices",
+        items: [
+            { name: "Rapeseed oil", category: "pantry", quantity: 1, unit: "l" },
+            { name: "Olive oil", category: "pantry", quantity: 500, unit: "ml" },
+            { name: "Malt vinegar", category: "pantry", quantity: 350, unit: "ml" },
+            { name: "Penne pasta", category: "carbs", quantity: 1, unit: "kg" },
+            { name: "Basmati rice", category: "carbs", quantity: 1, unit: "kg" },
+            { name: "Chopped tomatoes", category: "pantry", quantity: 4, unit: "tin" },
+            { name: "Chicken stock cubes", category: "pantry", quantity: 1, unit: "pack" },
+            { name: "Table salt", category: "pantry", quantity: 500, unit: "g" },
+            { name: "Black pepper", category: "pantry", quantity: 100, unit: "g" },
+            { name: "Dried oregano", category: "pantry", quantity: 50, unit: "g" },
+            { name: "Smoked paprika", category: "pantry", quantity: 50, unit: "g" },
+            { name: "Garlic granules", category: "pantry", quantity: 50, unit: "g" }
+        ]
+    },
+    {
+        id: "pack-gym-basics",
+        name: "🏋️ Gym Kitchen Basics",
+        description: "Protein powder, oats, rice cakes, peanut butter, Greek yoghurt",
+        items: [
+            { name: "Whey protein powder", category: "protein", quantity: 1, unit: "kg" },
+            { name: "Porridge oats", category: "carbs", quantity: 1, unit: "kg" },
+            { name: "White rice cakes", category: "carbs", quantity: 2, unit: "pack" },
+            { name: "Peanut butter", category: "pantry", quantity: 400, unit: "g" },
+            { name: "Greek yogurt", category: "dairy", quantity: 1, unit: "kg" },
+            { name: "Eggs", category: "protein", quantity: 12, unit: "pcs" },
+            { name: "Frozen broccoli", category: "produce", quantity: 1, unit: "kg" },
+            { name: "Chicken breast", category: "protein", quantity: 1, unit: "kg" }
+        ]
+    },
+    {
+        id: "pack-baking-essentials",
+        name: "🍞 Baking Essentials",
+        description: "Flour, sugar, baking powder, butter, eggs, vanilla",
+        items: [
+            { name: "Plain flour", category: "pantry", quantity: 1.5, unit: "kg" },
+            { name: "Caster sugar", category: "pantry", quantity: 1, unit: "kg" },
+            { name: "Baking powder", category: "pantry", quantity: 150, unit: "g" },
+            { name: "Unsalted butter", category: "dairy", quantity: 250, unit: "g" },
+            { name: "Eggs", category: "protein", quantity: 6, unit: "pcs" },
+            { name: "Vanilla extract", category: "pantry", quantity: 100, unit: "ml" },
+            { name: "Cacao powder", category: "pantry", quantity: 250, unit: "g" }
+        ]
+    },
+    {
+        id: "pack-tins-jars",
+        name: "🥫 Tins & Jars",
+        description: "Chickpeas, kidney beans, coconut milk, chopped tomatoes, lentils",
+        items: [
+            { name: "Canned chickpeas", category: "protein", quantity: 3, unit: "tin" },
+            { name: "Red kidney beans", category: "protein", quantity: 3, unit: "tin" },
+            { name: "Light coconut milk", category: "pantry", quantity: 400, unit: "ml" },
+            { name: "Chopped tomatoes", category: "pantry", quantity: 4, unit: "tin" },
+            { name: "Green lentils", category: "protein", quantity: 500, unit: "g" },
+            { name: "Canned sweetcorn", category: "produce", quantity: 3, unit: "tin" }
+        ]
+    }
+];
+
+window.renderStarterPacks = function() {
+    const grid = document.getElementById("starterPacksGrid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+    STARTER_PACKS.forEach(pack => {
+        const card = document.createElement("div");
+        card.style.cssText = `
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        `;
+        
+        card.onmouseover = () => {
+            card.style.borderColor = "var(--color-primary)";
+            card.style.background = "rgba(255, 255, 255, 0.05)";
+        };
+        card.onmouseout = () => {
+            if (!card.classList.contains("selected")) {
+                card.style.borderColor = "rgba(255, 255, 255, 0.06)";
+                card.style.background = "rgba(255, 255, 255, 0.03)";
+            }
+        };
+
+        const topRow = document.createElement("div");
+        topRow.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+        topRow.innerHTML = `
+            <strong style="font-size: 14px; color: #fff;">${pack.name}</strong>
+            <span style="font-size: 11px; background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 8px; color: var(--color-text-light);">${pack.items.length} items</span>
+        `;
+
+        const desc = document.createElement("p");
+        desc.style.cssText = `
+            margin: 0;
+            font-size: 12px;
+            color: var(--color-text-light);
+            line-height: 1.4;
+        `;
+        desc.textContent = pack.description;
+
+        const previewList = document.createElement("div");
+        previewList.style.cssText = `
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 5px;
+        `;
+        const previewNames = pack.items.slice(0, 3).map(i => i.name).join(", ");
+        previewList.textContent = `Preview: ${previewNames}...`;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "starter-pack-checkbox";
+        checkbox.dataset.packId = pack.id;
+        checkbox.style.cssText = `
+            margin-left: auto;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        `;
+
+        card.appendChild(topRow);
+        card.appendChild(desc);
+        card.appendChild(previewList);
+        card.appendChild(checkbox);
+
+        card.onclick = (e) => {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
+            if (checkbox.checked) {
+                card.classList.add("selected");
+                card.style.borderColor = "var(--color-primary)";
+                card.style.background = "rgba(16, 185, 129, 0.05)";
+            } else {
+                card.classList.remove("selected");
+                card.style.borderColor = "rgba(255, 255, 255, 0.06)";
+                card.style.background = "rgba(255, 255, 255, 0.03)";
+            }
+        };
+
+        grid.appendChild(card);
+    });
+};
+
+window.addSelectedStarterPacks = async function() {
+    const checkboxes = document.querySelectorAll(".starter-pack-checkbox:checked");
+    if (checkboxes.length === 0) {
+        alert("Please select at least one starter pack.");
+        return;
+    }
+
+    const itemsToSave = [];
+    checkboxes.forEach(cb => {
+        const pack = STARTER_PACKS.find(p => p.id === cb.dataset.packId);
+        if (pack) {
+            pack.items.forEach(item => {
+                itemsToSave.push({
+                    id: `staple-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                    name: item.name,
+                    category: item.category,
+                    quantity: item.quantity,
+                    unit: item.unit
+                });
+            });
+        }
+    });
+
+    try {
+        await API.bulkSaveStaples(itemsToSave);
+        alert(`Successfully added ${itemsToSave.length} staples from selected Starter Packs!`);
+        await syncStaples();
+        renderStaples();
+        recomputeShoppingData();
+        
+        document.querySelectorAll(".starter-pack-checkbox").forEach(cb => {
+            cb.checked = false;
+            const card = cb.closest("div");
+            if (card) {
+                card.classList.remove("selected");
+                card.style.borderColor = "rgba(255, 255, 255, 0.06)";
+                card.style.background = "rgba(255, 255, 255, 0.03)";
+            }
+        });
+    } catch (err) {
+        alert(`Failed to add starter packs: ${err.message}`);
+    }
+};

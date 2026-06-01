@@ -70,7 +70,7 @@
                     <div>
                         <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;"></h3>
 
-                        <div class="meal-item shared-dinner">
+                        <div class="meal-item shared-dinner recipe-card">
                             <div class="plan-badge" style="position: absolute; top: 8px; right: 8px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
                             <div class="meal-time">Dinner</div>
                             <div class="meal-name"></div>
@@ -92,7 +92,7 @@
                         </div>
                     </div>
                 </template>
-                <div class="grid">
+                <div class="grid recipe-grid">
                 </div>
 
                 <div class="buttons" style="margin-top: 20px;">
@@ -136,11 +136,29 @@
                         ➕ Add staple
                     </button>
                 </div>
-                <div class="buttons" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-                    <button class="btn-secondary" onclick="exportWeeklyStaples()">⬇ Export Staples</button>
-                    <button class="btn-secondary" onclick="importWeeklyStaples()">⬆ Import Staples</button>
+                <div class="buttons" style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <button class="btn-secondary" onclick="exportFullJSONBackup()" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa;">⬇ Export JSON (Full Backup)</button>
+                    <button class="btn-secondary" onclick="exportStaplesCSV()">⬇ Export CSV</button>
+                    <button class="btn-secondary" onclick="triggerJSONImportPicker()">⬆ Import JSON Backup</button>
+                    <button class="btn-secondary" onclick="triggerStaplesCSVImportPicker()" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">⬆ Import CSV</button>
                     <button class="btn-secondary" onclick="clearWeeklyStaples()">🗑 Delete All Staples</button>
                 </div>
+                <div style="margin-top: 10px; font-size: 12px; color: var(--color-text-light); display: flex; align-items: center; gap: 6px;">
+                    <span>📋 Need a starting point?</span>
+                    <a href="#" onclick="downloadStaplesCSVTemplate(event)" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Download Staples CSV Template</a>
+                </div>
+            </div>
+
+            <!-- STARTER PACKS CARD -->
+            <div class="card" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 100%); border: 1px solid rgba(255,255,255,0.08);">
+                <h3 style="margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">🧂 Starter Packs <span style="font-size: 11px; background: var(--color-primary); color: white; padding: 2px 6px; border-radius: 10px;">Quick Onboarding</span></h3>
+                <p style="color: var(--color-text-light); font-size: 13px; margin-bottom: 15px;">
+                    Select one or more curated starter packs to instantly stock your kitchen staples. Already-owned staples won't be duplicated.
+                </p>
+                <div class="grid grid-2" id="starterPacksGrid" style="gap: 15px; margin-bottom: 15px;">
+                    <!-- Populated dynamically via JS -->
+                </div>
+                <button class="btn-primary" onclick="addSelectedStarterPacks()" style="width: 100%; font-weight: 600; padding: 12px;">Add Selected to My Staples ➕</button>
             </div>
 
             <div class="card">
@@ -246,10 +264,16 @@
 
                     <button class="btn-primary" onclick="addInventoryItem()">+ Add Item</button>
 
-                    <div class="buttons" style="margin-bottom: 20px;">
-                        <button class="btn-secondary" onclick="exportInventory()">⬇ Export Inventory</button>
-                        <button class="btn-secondary" onclick="importInventory()">⬆ Import Inventory</button>
+                    <div class="buttons" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                        <button class="btn-secondary" onclick="exportFullJSONBackup()" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa;">⬇ Export JSON (Full Backup)</button>
+                        <button class="btn-secondary" onclick="exportInventoryCSV()">⬇ Export CSV</button>
+                        <button class="btn-secondary" onclick="triggerJSONImportPicker()">⬆ Import JSON Backup</button>
+                        <button class="btn-secondary" onclick="triggerInventoryCSVImportPicker()" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399;">⬆ Import CSV</button>
                         <button class="btn-secondary" onclick="clearInventory()">🗑 Delete All</button>
+                    </div>
+                    <div style="margin-top: -10px; margin-bottom: 20px; font-size: 12px; color: var(--color-text-light); display: flex; align-items: center; gap: 6px;">
+                        <span>📋 Need a starting point?</span>
+                        <a href="#" onclick="downloadInventoryCSVTemplate(event)" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Download Inventory CSV Template</a>
                     </div>
 
                 </div>
@@ -288,7 +312,7 @@
 
                 <template id="recipe-template">
                     <div>
-                        <div class="meal-item shared-dinner">
+                        <div class="meal-item shared-dinner recipe-card">
                             <button class="favourite-btn" aria-label="Add to favourites">☆</button>
                             <div class="plan-badge" style="position: absolute; top: 8px; right: 42px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
                             <div class="meal-name"></div>
@@ -313,7 +337,7 @@
                         </div>
                     </div>
                 </template>
-                <div class="grid">
+                <div class="grid recipe-grid">
                 </div>
         </div>
     </div>
@@ -419,6 +443,41 @@
             <h2 style="margin-bottom: 20px; background: linear-gradient(135deg, var(--color-primary), var(--color-success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⚙️ Household Settings</h2>
             <div id="settingsContainer" style="display: flex; flex-direction: column; gap: 20px;">
                 <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file pickers for import actions -->
+    <input type="file" id="jsonBackupImportPicker" accept=".json,application/json" style="display: none;" onchange="handleJSONBackupImport(event)" />
+    <input type="file" id="csvStaplesImportPicker" accept=".csv,text/csv" style="display: none;" onchange="handleCSVImport(event, 'staples')" />
+    <input type="file" id="csvInventoryImportPicker" accept=".csv,text/csv" style="display: none;" onchange="handleCSVImport(event, 'inventory')" />
+
+    <!-- CSV Preview Modal -->
+    <div class="modal" id="csvPreviewModal">
+        <div class="modal-content" style="max-width: 600px; padding: 25px; position: relative; background: var(--color-bg-card, #2a3441); border: 1px solid var(--color-border); border-radius: 12px;">
+            <button class="modal-close" onclick="closeCSVPreviewModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; color: var(--color-text-light); cursor: pointer;">×</button>
+            <h2 id="csvPreviewTitle" style="margin-bottom: 10px; color: var(--color-primary); font-size: 20px; font-weight: 700;">📋 CSV Upload Preview</h2>
+            <p id="csvPreviewSubtitle" style="color: var(--color-text-light); font-size: 13px; margin-bottom: 15px;"></p>
+            
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.1);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--color-border);">
+                            <th style="padding: 10px; color: var(--color-text-light); font-weight: 600;">Name</th>
+                            <th style="padding: 10px; color: var(--color-text-light); font-weight: 600;">Category</th>
+                            <th style="padding: 10px; color: var(--color-text-light); font-weight: 600;">Quantity</th>
+                            <th style="padding: 10px; color: var(--color-text-light); font-weight: 600;">Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="csvPreviewTableBody">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeCSVPreviewModal()" style="padding: 8px 16px;">Cancel</button>
+                <button type="button" class="btn-success" id="csvPreviewConfirmBtn" style="background: linear-gradient(135deg, var(--color-success), #059669); font-weight: 600; padding: 8px 20px; border-radius: 8px; border: none; color: white; cursor: pointer;">Confirm & Upload ✅</button>
             </div>
         </div>
     </div>
