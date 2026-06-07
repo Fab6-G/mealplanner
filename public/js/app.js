@@ -3104,6 +3104,514 @@ async function downloadCSV(url, filename) {
     }
 }
 
+async function downloadFile(url, filename) {
+    try {
+        const response = await fetch(url, { credentials: "include" });
+        if (!response.ok) {
+            if (response.status === 401) {
+                API.showLoginOverlay();
+                throw new Error("Unauthorized. Please log in.");
+            }
+            throw new Error("Download failed");
+        }
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+        console.error(err);
+        showToast(`Failed to download file: ${err.message}`, "error");
+    }
+}
+
+window.toggleRecipeImportExportDropdown = function(event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById("recipeImportExportDropdown");
+    if (dropdown) {
+        const isHidden = dropdown.style.display === "none";
+        dropdown.style.display = isHidden ? "block" : "none";
+    }
+};
+
+window.hideRecipeImportExportDropdown = function() {
+    const dropdown = document.getElementById("recipeImportExportDropdown");
+    if (dropdown) {
+        dropdown.style.display = "none";
+    }
+};
+
+// Close recipe dropdown when clicking outside
+document.addEventListener("click", function (e) {
+    const btn = document.getElementById("recipeImportExportBtn");
+    const dropdown = document.getElementById("recipeImportExportDropdown");
+    if (dropdown && btn && e.target !== btn && !btn.contains(e.target) && e.target !== dropdown && !dropdown.contains(e.target)) {
+        hideRecipeImportExportDropdown();
+    }
+});
+
+window.exportRecipesJSON = function(event) {
+    if (event) event.preventDefault();
+    downloadFile(`${API_BASE_URL}/api/recipes/export/json`, "recipes-export.json");
+    hideRecipeImportExportDropdown();
+};
+
+window.exportRecipesCSV = function(event) {
+    if (event) event.preventDefault();
+    downloadFile(`${API_BASE_URL}/api/recipes/export/csv`, "recipes-export.csv");
+    hideRecipeImportExportDropdown();
+};
+
+window.downloadRecipesCSVTemplate = function(event) {
+    if (event) event.preventDefault();
+    const csvContent = "# Note: Tags should be separated by semicolons (;) since comma is the CSV delimiter.\n" +
+        "recipe_name,description,prep_time_mins,cook_time_mins,base_servings,min_servings,max_servings,cost_per_serving_gbp,tags,calories,protein_g,carbs_g,fat_g,ingredient_name,ingredient_qty,ingredient_unit,ingredient_category,ingredient_notes\n" +
+        "Chicken Stir Fry,Quick weeknight meal,10,20,2,,4,1.75,high-protein;quick,480,42,35,10,chicken breast,150,g,protein,sliced\n" +
+        "Chicken Stir Fry,Quick weeknight meal,10,20,2,,4,1.75,high-protein;quick,480,42,35,10,soy sauce,15,ml,pantry,\n";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recipes_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    hideRecipeImportExportDropdown();
+};
+
+window.triggerRecipeJSONImportPicker = function(event) {
+    if (event) event.preventDefault();
+    document.getElementById("recipeJsonImportPicker").click();
+    hideRecipeImportExportDropdown();
+};
+
+window.triggerRecipeCSVImportPicker = function(event) {
+    if (event) event.preventDefault();
+    document.getElementById("recipeCsvImportPicker").click();
+    hideRecipeImportExportDropdown();
+};
+
+let pendingImportRecipes = [];
+let pendingImportFile = null;
+let pendingImportType = ""; // "json" or "csv"
+
+window.closeRecipeImportPreviewModal = function() {
+    const modal = document.getElementById("recipeImportPreviewModal");
+    if (modal) modal.classList.remove("active");
+    pendingImportRecipes = [];
+    pendingImportFile = null;
+    pendingImportType = "";
+};
+
+window.handleRecipeJSONImport = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+        try {
+            const data = JSON.parse(reader.result);
+            if (!data || data.version !== "2.0" || !Array.isArray(data.recipes)) {
+                alert("Failed to import: Unsupported or invalid recipe file structure. Requires version '2.0' and recipes array.");
+                return;
+            }
+
+            pendingImportRecipes = data.recipes;
+            pendingImportType = "json";
+            showRecipeImportPreview();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to parse recipe JSON file. Make sure it's a valid JSON export.");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+};
+
+window.handleRecipeCSVImport = async function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+        try {
+            const rows = parseClientRecipesCSV(reader.result);
+            const { recipes, error } = reconstructRecipesFromCSVRows(rows);
+            if (error) {
+                alert(error);
+                return;
+            }
+            if (recipes.length === 0) {
+                alert("No recipes found in CSV file.");
+                return;
+            }
+
+            pendingImportRecipes = recipes;
+            pendingImportType = "csv";
+            pendingImportFile = file;
+            showRecipeImportPreview();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to parse recipe CSV file. Make sure it's a valid CSV export.");
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+};
+
+function parseClientRecipesCSV(text) {
+    const lines = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+        
+        if (inQuotes) {
+            if (char === '"') {
+                if (nextChar === '"') {
+                    cell += '"';
+                    i++;
+                } else {
+                    inQuotes = false;
+                }
+            } else {
+                cell += char;
+            }
+        } else {
+            if (char === '"') {
+                inQuotes = true;
+            } else if (char === ',') {
+                row.push(cell);
+                cell = "";
+            } else if (char === '\n' || char === '\r') {
+                row.push(cell);
+                cell = "";
+                if (row.length > 0) {
+                    if (!row[0].startsWith("#")) {
+                        lines.push(row);
+                    }
+                }
+                row = [];
+                if (char === '\r' && nextChar === '\n') {
+                    i++;
+                }
+            } else {
+                cell += char;
+            }
+        }
+    }
+    if (cell !== "" || row.length > 0) {
+        row.push(cell);
+        if (!row[0].startsWith("#")) {
+            lines.push(row);
+        }
+    }
+    return lines;
+}
+
+function reconstructRecipesFromCSVRows(rows) {
+    if (rows.length < 2) return { recipes: [], error: "CSV file is empty or missing data." };
+    
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const expectedHeaders = [
+        "recipe_name", "base_servings", "calories", "protein_g", "carbs_g", "fat_g",
+        "ingredient_name", "ingredient_qty", "ingredient_unit", "ingredient_category"
+    ];
+    const missing = expectedHeaders.filter(h => !headers.includes(h));
+    if (missing.length > 0) {
+        return { recipes: [], error: `Invalid CSV headers. Missing required columns: ${missing.join(", ")}` };
+    }
+    
+    const recipeNameIdx = headers.indexOf("recipe_name");
+    const descIdx = headers.indexOf("description");
+    const prepIdx = headers.indexOf("prep_time_mins");
+    const cookIdx = headers.indexOf("cook_time_mins");
+    const baseServingsIdx = headers.indexOf("base_servings");
+    const minServingsIdx = headers.indexOf("min_servings");
+    const maxServingsIdx = headers.indexOf("max_servings");
+    const costIdx = headers.indexOf("cost_per_serving_gbp");
+    const tagsIdx = headers.indexOf("tags");
+    const calIdx = headers.indexOf("calories");
+    const proteinIdx = headers.indexOf("protein_g");
+    const carbsIdx = headers.indexOf("carbs_g");
+    const fatIdx = headers.indexOf("fat_g");
+    const ingNameIdx = headers.indexOf("ingredient_name");
+    const ingQtyIdx = headers.indexOf("ingredient_qty");
+    const ingUnitIdx = headers.indexOf("ingredient_unit");
+    const ingCatIdx = headers.indexOf("ingredient_category");
+    const ingNotesIdx = headers.indexOf("ingredient_notes");
+
+    const recipeMap = new Map();
+    
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.length === 0 || (row.length === 1 && row[0] === "")) continue;
+        
+        const name = row[recipeNameIdx] ? row[recipeNameIdx].trim() : "";
+        if (!name) continue;
+        
+        const key = name.toLowerCase();
+        if (!recipeMap.has(key)) {
+            const recipe = {
+                name: name,
+                description: descIdx !== -1 && row[descIdx] ? row[descIdx].trim() : "",
+                prep_time_mins: prepIdx !== -1 && row[prepIdx] !== "" ? Number(row[prepIdx]) : 0,
+                cook_time_mins: cookIdx !== -1 && row[cookIdx] !== "" ? Number(row[cookIdx]) : 0,
+                base_servings: baseServingsIdx !== -1 && row[baseServingsIdx] !== "" ? Number(row[baseServingsIdx]) : null,
+                min_servings: minServingsIdx !== -1 && row[minServingsIdx] !== "" ? Number(row[minServingsIdx]) : null,
+                max_servings: maxServingsIdx !== -1 && row[maxServingsIdx] !== "" ? Number(row[maxServingsIdx]) : null,
+                estimated_cost_per_serving_gbp: costIdx !== -1 && row[costIdx] !== "" ? Number(row[costIdx]) : null,
+                tags: tagsIdx !== -1 && row[tagsIdx] ? row[tagsIdx].split(";").map(t => t.trim()).filter(Boolean) : [],
+                macros_per_serving: {
+                    calories: calIdx !== -1 && row[calIdx] !== "" ? Number(row[calIdx]) : null,
+                    protein_g: proteinIdx !== -1 && row[proteinIdx] !== "" ? Number(row[proteinIdx]) : null,
+                    carbs_g: carbsIdx !== -1 && row[carbsIdx] !== "" ? Number(row[carbsIdx]) : null,
+                    fat_g: fatIdx !== -1 && row[fatIdx] !== "" ? Number(row[fatIdx]) : null
+                },
+                ingredients: []
+            };
+            recipeMap.set(key, recipe);
+        }
+        
+        const recipe = recipeMap.get(key);
+        const ingName = ingNameIdx !== -1 && row[ingNameIdx] ? row[ingNameIdx].trim() : "";
+        if (ingName) {
+            recipe.ingredients.push({
+                name: ingName,
+                quantity_per_serving: ingQtyIdx !== -1 && row[ingQtyIdx] !== "" ? Number(row[ingQtyIdx]) : null,
+                unit: ingUnitIdx !== -1 && row[ingUnitIdx] ? row[ingUnitIdx].trim().toLowerCase() : "",
+                category: ingCatIdx !== -1 && row[ingCatIdx] ? row[ingCatIdx].trim().toLowerCase() : "",
+                notes: ingNotesIdx !== -1 && row[ingNotesIdx] ? row[ingNotesIdx].trim() : ""
+            });
+        }
+    }
+    
+    return { recipes: Array.from(recipeMap.values()), error: null };
+}
+
+function validateRecipeClient(recipe) {
+    const errors = [];
+    if (!recipe.name || typeof recipe.name !== "string" || recipe.name.trim().length === 0) {
+        errors.push("Recipe name is required.");
+    }
+    
+    if (recipe.base_servings === undefined || recipe.base_servings === null || recipe.base_servings === "") {
+        errors.push("base_servings is required.");
+    } else {
+        const baseServings = Number(recipe.base_servings);
+        if (isNaN(baseServings) || baseServings <= 0) {
+            errors.push("base_servings must be a positive number.");
+        }
+    }
+
+    if (!recipe.macros_per_serving) {
+        errors.push("macros_per_serving is required.");
+    } else {
+        const { calories, protein_g, carbs_g, fat_g } = recipe.macros_per_serving;
+        if (calories === undefined || calories === null || calories === "" || isNaN(Number(calories)) || Number(calories) < 0) {
+            errors.push("macros_per_serving.calories must be a positive number.");
+        }
+        if (protein_g === undefined || protein_g === null || protein_g === "" || isNaN(Number(protein_g)) || Number(protein_g) < 0) {
+            errors.push("macros_per_serving.protein_g must be a positive number.");
+        }
+        if (carbs_g === undefined || carbs_g === null || carbs_g === "" || isNaN(Number(carbs_g)) || Number(carbs_g) < 0) {
+            errors.push("macros_per_serving.carbs_g must be a positive number.");
+        }
+        if (fat_g === undefined || fat_g === null || fat_g === "" || isNaN(Number(fat_g)) || Number(fat_g) < 0) {
+            errors.push("macros_per_serving.fat_g must be a positive number.");
+        }
+    }
+
+    if (recipe.min_servings !== undefined && recipe.min_servings !== null && recipe.min_servings !== "") {
+        const minS = Number(recipe.min_servings);
+        if (isNaN(minS) || minS <= 0) {
+            errors.push("min_servings must be a positive number.");
+        }
+    }
+    if (recipe.max_servings !== undefined && recipe.max_servings !== null && recipe.max_servings !== "") {
+        const maxS = Number(recipe.max_servings);
+        if (isNaN(maxS) || maxS <= 0) {
+            errors.push("max_servings must be a positive number.");
+        }
+    }
+
+    if (recipe.min_servings !== undefined && recipe.min_servings !== null && recipe.min_servings !== "" &&
+        recipe.max_servings !== undefined && recipe.max_servings !== null && recipe.max_servings !== "") {
+        const minS = Number(recipe.min_servings);
+        const maxS = Number(recipe.max_servings);
+        if (!isNaN(minS) && !isNaN(maxS) && minS > maxS) {
+            errors.push(`min_servings (${minS}) must be ≤ max_servings (${maxS}).`);
+        }
+    }
+
+    if (recipe.prep_time_mins !== undefined && recipe.prep_time_mins !== null && recipe.prep_time_mins !== "") {
+        if (isNaN(Number(recipe.prep_time_mins)) || Number(recipe.prep_time_mins) < 0) {
+            errors.push("prep_time_mins must be a positive number.");
+        }
+    }
+    if (recipe.cook_time_mins !== undefined && recipe.cook_time_mins !== null && recipe.cook_time_mins !== "") {
+        if (isNaN(Number(recipe.cook_time_mins)) || Number(recipe.cook_time_mins) < 0) {
+            errors.push("cook_time_mins must be a positive number.");
+        }
+    }
+    if (recipe.estimated_cost_per_serving_gbp !== undefined && recipe.estimated_cost_per_serving_gbp !== null && recipe.estimated_cost_per_serving_gbp !== "") {
+        if (isNaN(Number(recipe.estimated_cost_per_serving_gbp)) || Number(recipe.estimated_cost_per_serving_gbp) < 0) {
+            errors.push("estimated_cost_per_serving_gbp must be a positive number.");
+        }
+    }
+
+    const ALLOWED_UNITS = new Set(["g", "kg", "ml", "l", "piece", "pack", "tin", "jar", "loaf", "box", "tbsp", "tsp", "whole", "pcs"]);
+
+    if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+        errors.push("At least one ingredient is required.");
+    } else {
+        recipe.ingredients.forEach((ing, i) => {
+            const idx = i + 1;
+            if (!ing.name || typeof ing.name !== "string" || ing.name.trim().length === 0) {
+                errors.push(`Ingredient #${idx}: name is required.`);
+            }
+            if (ing.quantity_per_serving === undefined || ing.quantity_per_serving === null || ing.quantity_per_serving === "") {
+                errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): quantity_per_serving is required.`);
+            } else {
+                const qty = Number(ing.quantity_per_serving);
+                if (isNaN(qty) || qty <= 0) {
+                    errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): quantity_per_serving must be a positive number.`);
+                }
+            }
+            const unit = (ing.unit || "").trim().toLowerCase();
+            if (!ALLOWED_UNITS.has(unit)) {
+                errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): unit "${unit}" is invalid. Valid options are: ${Array.from(ALLOWED_UNITS).join(", ")}`);
+            }
+            if (!ing.category || typeof ing.category !== "string" || ing.category.trim().length === 0) {
+                errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): category is required.`);
+            }
+        });
+    }
+
+    return errors;
+}
+
+function showRecipeImportPreview() {
+    const modal = document.getElementById("recipeImportPreviewModal");
+    const summaryText = document.getElementById("recipeImportPreviewSummary");
+    const listContainer = document.getElementById("recipeImportPreviewList");
+    const errorContainer = document.getElementById("recipeImportErrorContainer");
+    const errorList = document.getElementById("recipeImportErrorList");
+    const confirmBtn = document.getElementById("recipeImportConfirmBtn");
+
+    listContainer.innerHTML = "";
+    errorList.innerHTML = "";
+    errorContainer.style.display = "none";
+
+    let newCount = 0;
+    let updateCount = 0;
+    let invalidCount = 0;
+
+    const validRecipes = [];
+
+    pendingImportRecipes.forEach(recipe => {
+        const errors = validateRecipeClient(recipe);
+        const li = document.createElement("li");
+
+        if (errors.length > 0) {
+            invalidCount++;
+            li.style.color = "var(--color-danger, #f87171)";
+            li.innerHTML = `❌ <strong>${recipe.name || "Unnamed Recipe"}</strong> (invalid: ${errors.join(", ")})`;
+            listContainer.appendChild(li);
+        } else {
+            validRecipes.push(recipe);
+            const isUpdate = recipeBank.some(r => r.is_custom && r.name.trim().toLowerCase() === recipe.name.trim().toLowerCase());
+            if (isUpdate) {
+                updateCount++;
+                li.style.color = "var(--color-warning, #fbbf24)";
+                li.innerHTML = `⚠️ <strong>${recipe.name}</strong> (will be updated)`;
+            } else {
+                newCount++;
+                li.style.color = "var(--color-success, #34d399)";
+                li.innerHTML = `✅ <strong>${recipe.name}</strong> (new)`;
+            }
+            listContainer.appendChild(li);
+        }
+    });
+
+    summaryText.textContent = `Found ${pendingImportRecipes.length} recipes — ${newCount} new, ${updateCount} will be updated${invalidCount > 0 ? `, ${invalidCount} invalid` : ""}.`;
+
+    if (invalidCount > 0) {
+        errorContainer.style.display = "block";
+        pendingImportRecipes.forEach(recipe => {
+            const errors = validateRecipeClient(recipe);
+            if (errors.length > 0) {
+                const li = document.createElement("li");
+                li.innerHTML = `<strong>${recipe.name || "Unnamed Recipe"}:</strong> ${errors.join("; ")}`;
+                errorList.appendChild(li);
+            }
+        });
+    }
+
+    if (validRecipes.length > 0) {
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = "1";
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.style.opacity = "0.7";
+            confirmBtn.textContent = "Importing...";
+            
+            try {
+                let res;
+                if (pendingImportType === "json") {
+                    res = await API.importRecipesJSON({
+                        version: "2.0",
+                        recipes: validRecipes
+                    });
+                } else {
+                    const formData = new FormData();
+                    formData.append("file", pendingImportFile);
+                    res = await API.importRecipesCSV(formData);
+                }
+
+                if (res.errors && res.errors.length > 0) {
+                    errorContainer.style.display = "block";
+                    errorList.innerHTML = "";
+                    res.errors.forEach(err => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<strong>${err.recipe}:</strong> ${err.errors.join("; ")}`;
+                        errorList.appendChild(li);
+                    });
+                    confirmBtn.disabled = false;
+                    confirmBtn.style.opacity = "1";
+                    confirmBtn.textContent = "Confirm Import ✅";
+                    showToast(`Import completed with errors.`, "error");
+                } else {
+                    closeRecipeImportPreviewModal();
+                    await syncAllData();
+                    showToast(`Imported ${res.imported + res.updated} recipes (${res.imported} new, ${res.updated} updated)`, "success");
+                }
+            } catch (err) {
+                console.error(err);
+                errorContainer.style.display = "block";
+                errorList.innerHTML = `<li>Server Error: ${err.message || "Failed to submit import request."}</li>`;
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = "1";
+                confirmBtn.textContent = "Confirm Import ✅";
+            }
+        };
+    } else {
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = "0.5";
+        confirmBtn.onclick = null;
+    }
+
+    modal.classList.add("active");
+}
+
 window.exportFullJSONBackup = async function() {
     try {
         const data = await API.request("/api/export");

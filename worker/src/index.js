@@ -202,6 +202,168 @@ function calculateProportionalSplit(baseMacros, members) {
   });
 }
 
+function validateRecipe(recipe) {
+  const errors = [];
+  if (!recipe.name || typeof recipe.name !== "string" || recipe.name.trim().length === 0) {
+    errors.push("Recipe name is required.");
+  }
+  
+  if (recipe.base_servings === undefined || recipe.base_servings === null) {
+    errors.push("base_servings is required.");
+  } else {
+    const baseServings = Number(recipe.base_servings);
+    if (isNaN(baseServings) || baseServings <= 0) {
+      errors.push("base_servings must be a positive number.");
+    }
+  }
+
+  if (!recipe.macros_per_serving) {
+    errors.push("macros_per_serving is required.");
+  } else {
+    const { calories, protein_g, carbs_g, fat_g } = recipe.macros_per_serving;
+    if (calories === undefined || calories === null || isNaN(Number(calories)) || Number(calories) < 0) {
+      errors.push("macros_per_serving.calories must be a positive number.");
+    }
+    if (protein_g === undefined || protein_g === null || isNaN(Number(protein_g)) || Number(protein_g) < 0) {
+      errors.push("macros_per_serving.protein_g must be a positive number.");
+    }
+    if (carbs_g === undefined || carbs_g === null || isNaN(Number(carbs_g)) || Number(carbs_g) < 0) {
+      errors.push("macros_per_serving.carbs_g must be a positive number.");
+    }
+    if (fat_g === undefined || fat_g === null || isNaN(Number(fat_g)) || Number(fat_g) < 0) {
+      errors.push("macros_per_serving.fat_g must be a positive number.");
+    }
+  }
+
+  if (recipe.min_servings !== undefined && recipe.min_servings !== null && recipe.min_servings !== "") {
+    const minS = Number(recipe.min_servings);
+    if (isNaN(minS) || minS <= 0) {
+      errors.push("min_servings must be a positive number.");
+    }
+  }
+  if (recipe.max_servings !== undefined && recipe.max_servings !== null && recipe.max_servings !== "") {
+    const maxS = Number(recipe.max_servings);
+    if (isNaN(maxS) || maxS <= 0) {
+      errors.push("max_servings must be a positive number.");
+    }
+  }
+
+  if (recipe.min_servings !== undefined && recipe.min_servings !== null && recipe.min_servings !== "" &&
+      recipe.max_servings !== undefined && recipe.max_servings !== null && recipe.max_servings !== "") {
+    const minS = Number(recipe.min_servings);
+    const maxS = Number(recipe.max_servings);
+    if (!isNaN(minS) && !isNaN(maxS) && minS > maxS) {
+      errors.push(`min_servings (${minS}) must be ≤ max_servings (${maxS}).`);
+    }
+  }
+
+  if (recipe.prep_time_mins !== undefined && recipe.prep_time_mins !== null && recipe.prep_time_mins !== "") {
+    if (isNaN(Number(recipe.prep_time_mins)) || Number(recipe.prep_time_mins) < 0) {
+      errors.push("prep_time_mins must be a positive number.");
+    }
+  }
+  if (recipe.cook_time_mins !== undefined && recipe.cook_time_mins !== null && recipe.cook_time_mins !== "") {
+    if (isNaN(Number(recipe.cook_time_mins)) || Number(recipe.cook_time_mins) < 0) {
+      errors.push("cook_time_mins must be a positive number.");
+    }
+  }
+  if (recipe.estimated_cost_per_serving_gbp !== undefined && recipe.estimated_cost_per_serving_gbp !== null && recipe.estimated_cost_per_serving_gbp !== "") {
+    if (isNaN(Number(recipe.estimated_cost_per_serving_gbp)) || Number(recipe.estimated_cost_per_serving_gbp) < 0) {
+      errors.push("estimated_cost_per_serving_gbp must be a positive number.");
+    }
+  }
+
+  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) {
+    errors.push("At least one ingredient is required.");
+  } else {
+    recipe.ingredients.forEach((ing, i) => {
+      const idx = i + 1;
+      if (!ing.name || typeof ing.name !== "string" || ing.name.trim().length === 0) {
+        errors.push(`Ingredient #${idx}: name is required.`);
+      }
+      if (ing.quantity_per_serving === undefined || ing.quantity_per_serving === null || ing.quantity_per_serving === "") {
+        errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): quantity_per_serving is required.`);
+      } else {
+        const qty = Number(ing.quantity_per_serving);
+        if (isNaN(qty) || qty <= 0) {
+          errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): quantity_per_serving must be a positive number.`);
+        }
+      }
+      const unit = (ing.unit || "").trim().toLowerCase();
+      if (!ALLOWED_UNITS.has(unit)) {
+        errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): unit "${unit}" is invalid. Valid options are: ${Array.from(ALLOWED_UNITS).join(", ")}`);
+      }
+      if (!ing.category || typeof ing.category !== "string" || ing.category.trim().length === 0) {
+        errors.push(`Ingredient #${idx} (${ing.name || "unnamed"}): category is required.`);
+      }
+    });
+  }
+
+  return errors;
+}
+
+function parseCSV(text) {
+  const lines = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+    
+    if (inQuotes) {
+      if (char === '"') {
+        if (nextChar === '"') {
+          cell += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        row.push(cell);
+        cell = "";
+      } else if (char === '\n' || char === '\r') {
+        row.push(cell);
+        cell = "";
+        if (row.length > 0) {
+          if (!row[0].startsWith("#")) {
+            lines.push(row);
+          }
+        }
+        row = [];
+        if (char === '\r' && nextChar === '\n') {
+          i++;
+        }
+      } else {
+        cell += char;
+      }
+    }
+  }
+  if (cell !== "" || row.length > 0) {
+    row.push(cell);
+    if (!row[0].startsWith("#")) {
+      lines.push(row);
+    }
+  }
+  return lines;
+}
+
+function escapeCSV(val) {
+  if (val === undefined || val === null) return "";
+  const str = String(val);
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const corsHeaders = getCorsHeaders(request);
@@ -664,7 +826,7 @@ export default {
       }
 
       // GET /api/recipes/:id
-      if (method === "GET" && path.startsWith("/api/recipes/") && !path.endsWith("/portions")) {
+      if (method === "GET" && path.startsWith("/api/recipes/") && !path.endsWith("/portions") && !path.startsWith("/api/recipes/export/")) {
         const parts = path.split("/");
         const recipeId = parts[3];
 
@@ -1258,7 +1420,7 @@ export default {
         }));
 
         return new Response(JSON.stringify({
-          version: "1.0",
+          version: "2.0",
           exported_at: new Date().toISOString(),
           staples: staples.results.map(s => ({
             id: s.id,
@@ -1321,8 +1483,8 @@ export default {
       // Import JSON API
       if (method === "POST" && path === "/api/import") {
         const body = await request.json();
-        if (!body || body.version !== "1.0") {
-          return new Response(JSON.stringify({ error: "Invalid backup file: Unsupported version. Only version '1.0' is supported." }), {
+        if (!body || (body.version !== "1.0" && body.version !== "2.0")) {
+          return new Response(JSON.stringify({ error: "Invalid backup file: Unsupported version. Only version '1.0' and '2.0' are supported." }), {
             status: 400,
             headers: corsHeaders
           });
@@ -1382,8 +1544,28 @@ export default {
         // 3. Recipes
         if (Array.isArray(body.custom_recipes)) {
           recipesCount = body.custom_recipes.length;
+          
+          const existingRecipes = await db.prepare("SELECT id, name FROM recipes WHERE created_by_user_id = ? AND is_custom = 1").bind(userId).all();
+          const nameMap = new Map();
+          const idMap = new Map();
+          for (const row of existingRecipes.results) {
+            nameMap.set(row.name.trim().toLowerCase(), row.id);
+            idMap.set(row.id, row.name);
+          }
+
           for (const r of body.custom_recipes) {
-            const recipeId = r.id;
+            const nameKey = r.name.trim().toLowerCase();
+            let recipeId;
+            if (nameMap.has(nameKey)) {
+              recipeId = nameMap.get(nameKey);
+            } else if (r.id && idMap.has(r.id)) {
+              recipeId = r.id;
+              nameMap.set(nameKey, recipeId);
+            } else {
+              recipeId = "custom-" + crypto.randomUUID();
+              nameMap.set(nameKey, recipeId);
+              idMap.set(recipeId, r.name);
+            }
 
             statements.push(
               db.prepare(`
@@ -1463,6 +1645,504 @@ export default {
           staplesCount,
           inventoryCount,
           recipesCount
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      // Recipe-specific Export/Import APIs
+      if (method === "GET" && path === "/api/recipes/export/json") {
+        const recipes = await db.prepare(`
+          SELECT r.*,
+                 (SELECT json_group_array(json_object(
+                    'name', ri.name,
+                    'quantity_per_serving', ri.quantity_per_serving,
+                    'unit', ri.unit,
+                    'notes', ri.notes,
+                    'category', ri.category
+                 )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+          FROM recipes r
+          WHERE r.is_custom = 1 AND r.created_by_user_id = ?
+          ORDER BY r.name ASC
+        `).bind(userId).all();
+
+        const formattedRecipes = recipes.results.map(r => {
+          const baseServings = r.servings || 2;
+          const baseMacros = JSON.parse(r.macros || "{}");
+          const macros_per_serving = {
+            calories: Math.round((baseMacros.calories || 0) / baseServings),
+            protein_g: Math.round(((baseMacros.protein_g || 0) / baseServings) * 10) / 10,
+            carbs_g: Math.round(((baseMacros.carbs_g || 0) / baseServings) * 10) / 10,
+            fat_g: Math.round(((baseMacros.fat_g || 0) / baseServings) * 10) / 10
+          };
+          const ingredients = JSON.parse(r.ingredients_json || "[]").map(ing => ({
+            name: ing.name,
+            quantity_per_serving: ing.quantity_per_serving,
+            unit: ing.unit,
+            category: ing.category,
+            notes: ing.notes || ""
+          }));
+          return {
+            name: r.name,
+            description: r.description || "",
+            prep_time_mins: parseInt(r.prep_time) || 0,
+            cook_time_mins: parseInt(r.cook_time) || 0,
+            base_servings: baseServings,
+            min_servings: r.min_servings,
+            max_servings: r.max_servings,
+            estimated_cost_per_serving_gbp: r.estimated_cost_per_serving_gbp,
+            tags: JSON.parse(r.tags || "[]"),
+            macros_per_serving,
+            ingredients
+          };
+        });
+
+        return new Response(JSON.stringify({
+          version: "2.0",
+          exported_at: new Date().toISOString(),
+          recipes: formattedRecipes
+        }), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Content-Disposition": 'attachment; filename="recipes-export.json"'
+          }
+        });
+      }
+
+      if (method === "GET" && path === "/api/recipes/export/csv") {
+        const recipes = await db.prepare(`
+          SELECT r.*,
+                 (SELECT json_group_array(json_object(
+                    'name', ri.name,
+                    'quantity_per_serving', ri.quantity_per_serving,
+                    'unit', ri.unit,
+                    'notes', ri.notes,
+                    'category', ri.category
+                 )) FROM recipe_ingredients ri WHERE ri.recipe_id = r.id) AS ingredients_json
+          FROM recipes r
+          WHERE r.is_custom = 1 AND r.created_by_user_id = ?
+          ORDER BY r.name ASC
+        `).bind(userId).all();
+
+        const csvRows = [];
+        csvRows.push([
+          "recipe_name", "description", "prep_time_mins", "cook_time_mins", "base_servings",
+          "min_servings", "max_servings", "cost_per_serving_gbp", "tags",
+          "calories", "protein_g", "carbs_g", "fat_g",
+          "ingredient_name", "ingredient_qty", "ingredient_unit", "ingredient_category", "ingredient_notes"
+        ].join(","));
+
+        for (const r of recipes.results) {
+          const baseServings = r.servings || 2;
+          const baseMacros = JSON.parse(r.macros || "{}");
+          const calories = Math.round((baseMacros.calories || 0) / baseServings);
+          const protein_g = Math.round(((baseMacros.protein_g || 0) / baseServings) * 10) / 10;
+          const carbs_g = Math.round(((baseMacros.carbs_g || 0) / baseServings) * 10) / 10;
+          const fat_g = Math.round(((baseMacros.fat_g || 0) / baseServings) * 10) / 10;
+
+          const tagsArr = JSON.parse(r.tags || "[]");
+          const tagsStr = tagsArr.join(";");
+
+          const ingredients = JSON.parse(r.ingredients_json || "[]");
+
+          for (const ing of ingredients) {
+            const row = [
+              escapeCSV(r.name),
+              escapeCSV(r.description || ""),
+              escapeCSV(parseInt(r.prep_time) || 0),
+              escapeCSV(parseInt(r.cook_time) || 0),
+              escapeCSV(baseServings),
+              escapeCSV(r.min_servings),
+              escapeCSV(r.max_servings),
+              escapeCSV(r.estimated_cost_per_serving_gbp),
+              escapeCSV(tagsStr),
+              escapeCSV(calories),
+              escapeCSV(protein_g),
+              escapeCSV(carbs_g),
+              escapeCSV(fat_g),
+              escapeCSV(ing.name),
+              escapeCSV(ing.quantity_per_serving),
+              escapeCSV(ing.unit),
+              escapeCSV(ing.category),
+              escapeCSV(ing.notes || "")
+            ];
+            csvRows.push(row.join(","));
+          }
+        }
+
+        return new Response(csvRows.join("\n"), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "text/csv",
+            "Content-Disposition": 'attachment; filename="recipes-export.csv"'
+          }
+        });
+      }
+
+      if (method === "POST" && path === "/api/recipes/import/json") {
+        const body = await request.json();
+        if (!body || body.version !== "2.0" || !Array.isArray(body.recipes)) {
+          return new Response(JSON.stringify({ error: "Invalid payload: version '2.0' and recipes array required." }), {
+            status: 400,
+            headers: corsHeaders
+          });
+        }
+
+        const existingRecipes = await db.prepare("SELECT id, name FROM recipes WHERE created_by_user_id = ? AND is_custom = 1").bind(userId).all();
+        const nameMap = new Map();
+        const idMap = new Map();
+        for (const row of existingRecipes.results) {
+          nameMap.set(row.name.trim().toLowerCase(), row.id);
+          idMap.set(row.id, row.name);
+        }
+
+        const statements = [];
+        let imported = 0;
+        let updated = 0;
+        let skipped = 0;
+        const errors = [];
+
+        for (const r of body.recipes) {
+          const valErrors = validateRecipe(r);
+          if (valErrors.length > 0) {
+            skipped++;
+            errors.push({ recipe: r.name || "Unnamed Recipe", errors: valErrors });
+            continue;
+          }
+
+          const nameKey = r.name.trim().toLowerCase();
+          let recipeId;
+          let isUpdate = false;
+
+          if (nameMap.has(nameKey)) {
+            recipeId = nameMap.get(nameKey);
+            isUpdate = true;
+          } else if (r.id && idMap.has(r.id)) {
+            recipeId = r.id;
+            isUpdate = true;
+            nameMap.set(nameKey, recipeId);
+          } else {
+            recipeId = "custom-" + crypto.randomUUID();
+            nameMap.set(nameKey, recipeId);
+            idMap.set(recipeId, r.name);
+          }
+
+          if (isUpdate) {
+            updated++;
+          } else {
+            imported++;
+          }
+
+          const baseServings = Number(r.base_servings);
+          const baseMacros = {
+            calories: Math.round((Number(r.macros_per_serving.calories) || 0) * baseServings),
+            protein_g: Math.round((Number(r.macros_per_serving.protein_g) || 0) * baseServings * 10) / 10,
+            carbs_g: Math.round((Number(r.macros_per_serving.carbs_g) || 0) * baseServings * 10) / 10,
+            fat_g: Math.round((Number(r.macros_per_serving.fat_g) || 0) * baseServings * 10) / 10
+          };
+
+          const minServings = r.min_servings !== undefined && r.min_servings !== null && r.min_servings !== "" ? Number(r.min_servings) : null;
+          const maxServings = r.max_servings !== undefined && r.max_servings !== null && r.max_servings !== "" ? Number(r.max_servings) : null;
+          const estimatedCost = r.estimated_cost_per_serving_gbp !== undefined && r.estimated_cost_per_serving_gbp !== null && r.estimated_cost_per_serving_gbp !== "" ? Number(r.estimated_cost_per_serving_gbp) : null;
+
+          statements.push(
+            db.prepare(`
+              INSERT INTO recipes (
+                id, name, emoji, description, prep_time, cook_time, servings, 
+                ingredients, instructions, tips, macros, min_servings, max_servings, 
+                is_custom, created_by_user_id, estimated_cost_per_serving_gbp, tags
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                emoji = excluded.emoji,
+                description = excluded.description,
+                prep_time = excluded.prep_time,
+                cook_time = excluded.cook_time,
+                servings = excluded.servings,
+                ingredients = excluded.ingredients,
+                instructions = excluded.instructions,
+                tips = excluded.tips,
+                macros = excluded.macros,
+                min_servings = excluded.min_servings,
+                max_servings = excluded.max_servings,
+                is_custom = 1,
+                created_by_user_id = ?,
+                estimated_cost_per_serving_gbp = excluded.estimated_cost_per_serving_gbp,
+                tags = excluded.tags
+            `).bind(
+              recipeId,
+              r.name,
+              r.emoji || "🍳",
+              r.description || "",
+              `${r.prep_time_mins || 0} min`,
+              `${r.cook_time_mins || 0} min`,
+              baseServings,
+              JSON.stringify(r.ingredients || []),
+              JSON.stringify(r.instructions || []),
+              r.tips || "",
+              JSON.stringify(baseMacros),
+              minServings,
+              maxServings,
+              userId,
+              estimatedCost,
+              JSON.stringify(r.tags || []),
+              userId
+            )
+          );
+
+          statements.push(
+            db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(recipeId)
+          );
+
+          for (const ing of r.ingredients) {
+            statements.push(
+              db.prepare(
+                "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+              ).bind(
+                recipeId,
+                ing.name,
+                Number(ing.quantity_per_serving),
+                ing.unit.trim().toLowerCase(),
+                ing.notes || null,
+                ing.category
+              )
+            );
+          }
+        }
+
+        if (statements.length > 0) {
+          await db.batch(statements);
+        }
+
+        return new Response(JSON.stringify({
+          imported,
+          updated,
+          skipped,
+          errors
+        }), { status: 200, headers: corsHeaders });
+      }
+
+      if (method === "POST" && path === "/api/recipes/import/csv") {
+        const formData = await request.formData();
+        const file = formData.get("file");
+        if (!file) {
+          return new Response(JSON.stringify({ error: "No file uploaded." }), { status: 400, headers: corsHeaders });
+        }
+        const text = await file.text();
+        const rows = parseCSV(text);
+        
+        if (rows.length < 2) {
+          return new Response(JSON.stringify({ error: "CSV file is empty or missing data." }), { status: 400, headers: corsHeaders });
+        }
+        
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+        const expectedHeaders = [
+          "recipe_name", "base_servings", "calories", "protein_g", "carbs_g", "fat_g",
+          "ingredient_name", "ingredient_qty", "ingredient_unit", "ingredient_category"
+        ];
+        const missing = expectedHeaders.filter(h => !headers.includes(h));
+        if (missing.length > 0) {
+          return new Response(JSON.stringify({ error: `Invalid CSV headers. Missing required columns: ${missing.join(", ")}` }), { status: 400, headers: corsHeaders });
+        }
+        
+        const recipeNameIdx = headers.indexOf("recipe_name");
+        const descIdx = headers.indexOf("description");
+        const prepIdx = headers.indexOf("prep_time_mins");
+        const cookIdx = headers.indexOf("cook_time_mins");
+        const baseServingsIdx = headers.indexOf("base_servings");
+        const minServingsIdx = headers.indexOf("min_servings");
+        const maxServingsIdx = headers.indexOf("max_servings");
+        const costIdx = headers.indexOf("cost_per_serving_gbp");
+        const tagsIdx = headers.indexOf("tags");
+        const calIdx = headers.indexOf("calories");
+        const proteinIdx = headers.indexOf("protein_g");
+        const carbsIdx = headers.indexOf("carbs_g");
+        const fatIdx = headers.indexOf("fat_g");
+        const ingNameIdx = headers.indexOf("ingredient_name");
+        const ingQtyIdx = headers.indexOf("ingredient_qty");
+        const ingUnitIdx = headers.indexOf("ingredient_unit");
+        const ingCatIdx = headers.indexOf("ingredient_category");
+        const ingNotesIdx = headers.indexOf("ingredient_notes");
+
+        const recipeMap = new Map();
+        
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (row.length === 0 || (row.length === 1 && row[0] === "")) continue;
+          
+          const name = row[recipeNameIdx] ? row[recipeNameIdx].trim() : "";
+          if (!name) continue;
+          
+          const key = name.toLowerCase();
+          if (!recipeMap.has(key)) {
+            const recipe = {
+              name: name,
+              description: descIdx !== -1 && row[descIdx] ? row[descIdx].trim() : "",
+              prep_time_mins: prepIdx !== -1 && row[prepIdx] !== "" ? Number(row[prepIdx]) : 0,
+              cook_time_mins: cookIdx !== -1 && row[cookIdx] !== "" ? Number(row[cookIdx]) : 0,
+              base_servings: baseServingsIdx !== -1 && row[baseServingsIdx] !== "" ? Number(row[baseServingsIdx]) : null,
+              min_servings: minServingsIdx !== -1 && row[minServingsIdx] !== "" ? Number(row[minServingsIdx]) : null,
+              max_servings: maxServingsIdx !== -1 && row[maxServingsIdx] !== "" ? Number(row[maxServingsIdx]) : null,
+              estimated_cost_per_serving_gbp: costIdx !== -1 && row[costIdx] !== "" ? Number(row[costIdx]) : null,
+              tags: tagsIdx !== -1 && row[tagsIdx] ? row[tagsIdx].split(";").map(t => t.trim()).filter(Boolean) : [],
+              macros_per_serving: {
+                calories: calIdx !== -1 && row[calIdx] !== "" ? Number(row[calIdx]) : null,
+                protein_g: proteinIdx !== -1 && row[proteinIdx] !== "" ? Number(row[proteinIdx]) : null,
+                carbs_g: carbsIdx !== -1 && row[carbsIdx] !== "" ? Number(row[carbsIdx]) : null,
+                fat_g: fatIdx !== -1 && row[fatIdx] !== "" ? Number(row[fatIdx]) : null
+              },
+              ingredients: []
+            };
+            recipeMap.set(key, recipe);
+          }
+          
+          const recipe = recipeMap.get(key);
+          const ingName = ingNameIdx !== -1 && row[ingNameIdx] ? row[ingNameIdx].trim() : "";
+          if (ingName) {
+            recipe.ingredients.push({
+              name: ingName,
+              quantity_per_serving: ingQtyIdx !== -1 && row[ingQtyIdx] !== "" ? Number(row[ingQtyIdx]) : null,
+              unit: ingUnitIdx !== -1 && row[ingUnitIdx] ? row[ingUnitIdx].trim().toLowerCase() : "",
+              category: ingCatIdx !== -1 && row[ingCatIdx] ? row[ingCatIdx].trim().toLowerCase() : "",
+              notes: ingNotesIdx !== -1 && row[ingNotesIdx] ? row[ingNotesIdx].trim() : ""
+            });
+          }
+        }
+        
+        const recipesList = Array.from(recipeMap.values());
+        
+        const existingRecipes = await db.prepare("SELECT id, name FROM recipes WHERE created_by_user_id = ? AND is_custom = 1").bind(userId).all();
+        const nameMap = new Map();
+        const idMap = new Map();
+        for (const row of existingRecipes.results) {
+          nameMap.set(row.name.trim().toLowerCase(), row.id);
+          idMap.set(row.id, row.name);
+        }
+
+        const statements = [];
+        let imported = 0;
+        let updated = 0;
+        let skipped = 0;
+        const errors = [];
+
+        for (const r of recipesList) {
+          const valErrors = validateRecipe(r);
+          if (valErrors.length > 0) {
+            skipped++;
+            errors.push({ recipe: r.name || "Unnamed Recipe", errors: valErrors });
+            continue;
+          }
+
+          const nameKey = r.name.trim().toLowerCase();
+          let recipeId;
+          let isUpdate = false;
+
+          if (nameMap.has(nameKey)) {
+            recipeId = nameMap.get(nameKey);
+            isUpdate = true;
+          } else if (r.id && idMap.has(r.id)) {
+            recipeId = r.id;
+            isUpdate = true;
+            nameMap.set(nameKey, recipeId);
+          } else {
+            recipeId = "custom-" + crypto.randomUUID();
+            nameMap.set(nameKey, recipeId);
+            idMap.set(recipeId, r.name);
+          }
+
+          if (isUpdate) {
+            updated++;
+          } else {
+            imported++;
+          }
+
+          const baseServings = Number(r.base_servings);
+          const baseMacros = {
+            calories: Math.round((Number(r.macros_per_serving.calories) || 0) * baseServings),
+            protein_g: Math.round((Number(r.macros_per_serving.protein_g) || 0) * baseServings * 10) / 10,
+            carbs_g: Math.round((Number(r.macros_per_serving.carbs_g) || 0) * baseServings * 10) / 10,
+            fat_g: Math.round((Number(r.macros_per_serving.fat_g) || 0) * baseServings * 10) / 10
+          };
+
+          const minServings = r.min_servings !== undefined && r.min_servings !== null && r.min_servings !== "" ? Number(r.min_servings) : null;
+          const maxServings = r.max_servings !== undefined && r.max_servings !== null && r.max_servings !== "" ? Number(r.max_servings) : null;
+          const estimatedCost = r.estimated_cost_per_serving_gbp !== undefined && r.estimated_cost_per_serving_gbp !== null && r.estimated_cost_per_serving_gbp !== "" ? Number(r.estimated_cost_per_serving_gbp) : null;
+
+          statements.push(
+            db.prepare(`
+              INSERT INTO recipes (
+                id, name, emoji, description, prep_time, cook_time, servings, 
+                ingredients, instructions, tips, macros, min_servings, max_servings, 
+                is_custom, created_by_user_id, estimated_cost_per_serving_gbp, tags
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                emoji = excluded.emoji,
+                description = excluded.description,
+                prep_time = excluded.prep_time,
+                cook_time = excluded.cook_time,
+                servings = excluded.servings,
+                ingredients = excluded.ingredients,
+                instructions = excluded.instructions,
+                tips = excluded.tips,
+                macros = excluded.macros,
+                min_servings = excluded.min_servings,
+                max_servings = excluded.max_servings,
+                is_custom = 1,
+                created_by_user_id = ?,
+                estimated_cost_per_serving_gbp = excluded.estimated_cost_per_serving_gbp,
+                tags = excluded.tags
+            `).bind(
+              recipeId,
+              r.name,
+              r.emoji || "🍳",
+              r.description || "",
+              `${r.prep_time_mins || 0} min`,
+              `${r.cook_time_mins || 0} min`,
+              baseServings,
+              JSON.stringify(r.ingredients || []),
+              JSON.stringify(r.instructions || []),
+              r.tips || "",
+              JSON.stringify(baseMacros),
+              minServings,
+              maxServings,
+              userId,
+              estimatedCost,
+              JSON.stringify(r.tags || []),
+              userId
+            )
+          );
+
+          statements.push(
+            db.prepare("DELETE FROM recipe_ingredients WHERE recipe_id = ?").bind(recipeId)
+          );
+
+          for (const ing of r.ingredients) {
+            statements.push(
+              db.prepare(
+                "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+              ).bind(
+                recipeId,
+                ing.name,
+                Number(ing.quantity_per_serving),
+                ing.unit.trim().toLowerCase(),
+                ing.notes || null,
+                ing.category
+              )
+            );
+          }
+        }
+
+        if (statements.length > 0) {
+          await db.batch(statements);
+        }
+
+        return new Response(JSON.stringify({
+          imported,
+          updated,
+          skipped,
+          errors
         }), { status: 200, headers: corsHeaders });
       }
 

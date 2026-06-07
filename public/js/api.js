@@ -209,6 +209,20 @@ const API = {
     });
   },
 
+  async importRecipesJSON(data) {
+    return this.request("/api/recipes/import/json", {
+      method: "POST",
+      body: data
+    });
+  },
+
+  async importRecipesCSV(formData) {
+    return this.request("/api/recipes/import/csv", {
+      method: "POST",
+      body: formData
+    });
+  },
+
   // Shopping Checked States
   async getShoppingChecks(weekLabel) {
     return this.request(`/api/shopping/checks?week_label=${encodeURIComponent(weekLabel)}`);
