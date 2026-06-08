@@ -871,15 +871,62 @@ select:focus {
 }
 
 /* Favourites Toggle & Card Inline Error Styles */
+/* Recipe Card Header and Badges */
+.recipe-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 36px;
+    padding: 0;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.recipe-card-header-left {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.recipe-card-header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.recipe-card-header-left .plan-badge,
+.recipe-card-header-left .custom-recipe-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    white-space: nowrap;
+}
+
+.recipe-card-header-left .plan-badge {
+    background: var(--color-success);
+    color: white;
+}
+
+.recipe-card-header-left .custom-recipe-badge {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    color: white;
+}
+
 .favourite-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
+    position: static;
     background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -888,13 +935,12 @@ select:focus {
     color: var(--color-text-light);
     box-shadow: 0 2px 5px rgba(0,0,0,0.08);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 10;
 }
 
 .favourite-btn:hover {
     background: #FFFFFF;
     color: #f1c40f;
-    transform: scale(1.18);
+    transform: scale(1.15);
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
@@ -953,15 +999,10 @@ select:focus {
     box-shadow: 0 2px 8px rgba(155, 89, 182, 0.35) !important;
 }
 
-.recipe-card-controls {
-    display: flex;
-    gap: 6px;
-}
-
-.recipe-card-controls .card-control-btn {
+.recipe-card-header-right .card-control-btn {
     border-radius: 50% !important;
-    width: 28px !important;
-    height: 28px !important;
+    width: 32px !important;
+    height: 32px !important;
     background: rgba(255, 255, 255, 0.95) !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
     display: flex !important;
@@ -973,8 +1014,9 @@ select:focus {
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
-.recipe-card-controls .card-control-btn:hover {
+.recipe-card-header-right .card-control-btn:hover {
     background: #FFFFFF !important;
+    transform: scale(1.15) !important;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
 }
 

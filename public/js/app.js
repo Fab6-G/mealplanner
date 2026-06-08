@@ -1408,108 +1408,49 @@ function populateRecipesTab() {
             if (card) {
                 card.style.borderLeftColor = "#9b59b6";
                 
-                const customBadge = document.createElement("div");
-                customBadge.className = "custom-recipe-badge";
-                customBadge.textContent = "Custom";
-                customBadge.style.cssText = `
-                    position: absolute;
-                    top: 8px;
-                    left: 8px;
-                    background: linear-gradient(135deg, #8e44ad, #9b59b6);
-                    color: white;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    font-size: 9px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    z-index: 10;
-                `;
-                card.appendChild(customBadge);
+                const leftContainer = card.querySelector(".recipe-card-header-left");
+                if (leftContainer) {
+                    const customBadge = document.createElement("div");
+                    customBadge.className = "custom-recipe-badge";
+                    customBadge.textContent = "Custom";
+                    leftContainer.appendChild(customBadge);
+                }
             }
         }
 
         // Show edit/delete icon controls on custom recipes owned by the logged-in user
         if (recipe.is_custom && State.user && recipe.created_by_user_id === State.user.id) {
             if (card) {
-                const controlsContainer = document.createElement("div");
-                controlsContainer.className = "recipe-card-controls";
-                controlsContainer.style.cssText = `
-                    position: absolute;
-                    top: 8px;
-                    right: 42px;
-                    display: flex;
-                    gap: 6px;
-                    z-index: 15;
-                `;
-                
-                const editBtn = document.createElement("button");
-                editBtn.className = "card-control-btn edit-btn";
-                editBtn.innerHTML = "✏️";
-                editBtn.title = "Edit recipe";
-                editBtn.style.cssText = `
-                    background: rgba(255, 255, 255, 0.95);
-                    border: 1px solid rgba(0, 0, 0, 0.1);
-                    border-radius: 50%;
-                    width: 28px;
-                    height: 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    font-size: 12px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    transition: all 0.2s;
-                `;
-                editBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    showEditRecipeModal(recipe.id);
-                };
-                
-                const deleteBtn = document.createElement("button");
-                deleteBtn.className = "card-control-btn delete-btn";
-                deleteBtn.innerHTML = "🗑️";
-                deleteBtn.title = "Delete recipe";
-                deleteBtn.style.cssText = `
-                    background: rgba(255, 255, 255, 0.95);
-                    border: 1px solid rgba(0, 0, 0, 0.1);
-                    border-radius: 50%;
-                    width: 28px;
-                    height: 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    font-size: 12px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    transition: all 0.2s;
-                `;
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    deleteCustomRecipe(recipe.id, recipe.name);
-                };
-
-                editBtn.onmouseenter = () => editBtn.style.transform = "scale(1.15)";
-                editBtn.onmouseleave = () => editBtn.style.transform = "scale(1)";
-                deleteBtn.onmouseenter = () => deleteBtn.style.transform = "scale(1.15)";
-                deleteBtn.onmouseleave = () => deleteBtn.style.transform = "scale(1)";
-                
-                controlsContainer.appendChild(editBtn);
-                controlsContainer.appendChild(deleteBtn);
-                card.appendChild(controlsContainer);
+                const rightContainer = card.querySelector(".recipe-card-header-right");
+                if (rightContainer) {
+                    const editBtn = document.createElement("button");
+                    editBtn.className = "card-control-btn edit-btn";
+                    editBtn.innerHTML = "✏️";
+                    editBtn.title = "Edit recipe";
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        showEditRecipeModal(recipe.id);
+                    };
+                    
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.className = "card-control-btn delete-btn";
+                    deleteBtn.innerHTML = "🗑️";
+                    deleteBtn.title = "Delete recipe";
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteCustomRecipe(recipe.id, recipe.name);
+                    };
+                    
+                    rightContainer.appendChild(editBtn);
+                    rightContainer.appendChild(deleteBtn);
+                }
             }
         }
 
         if (badge) {
             if (usedDay) {
                 badge.textContent = `In plan (${usedDay})`;
-                badge.style.display = "inline-block";
-                // Prevent overlap with custom edit/delete buttons if present
-                if (recipe.is_custom && State.user && recipe.created_by_user_id === State.user.id) {
-                    badge.style.right = "108px";
-                } else {
-                    badge.style.right = "42px";
-                }
+                badge.style.display = "inline-flex";
             } else {
                 badge.textContent = "";
                 badge.style.display = "none";

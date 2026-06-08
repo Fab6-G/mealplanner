@@ -328,8 +328,14 @@
                 <template id="recipe-template">
                     <div>
                         <div class="meal-item shared-dinner recipe-card">
-                            <button class="favourite-btn" aria-label="Add to favourites">☆</button>
-                            <div class="plan-badge" style="position: absolute; top: 8px; right: 42px; background: var(--color-success); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;"></div>
+                            <div class="recipe-card-header">
+                                <div class="recipe-card-header-left">
+                                    <div class="plan-badge"></div>
+                                </div>
+                                <div class="recipe-card-header-right">
+                                    <button class="favourite-btn" aria-label="Add to favourites">☆</button>
+                                </div>
+                            </div>
                             <div class="meal-name"></div>
 
                             <div class="portions-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
