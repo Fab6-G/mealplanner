@@ -3,734 +3,3378 @@
 
 export const defaultRecipes = [
   {
-    id: "chicken-stir-fry-rice-bowls",
-    name: "Chicken Stir-Fry Rice Bowls",
-    emoji: "🍚",
-    description: "High-protein chicken and vegetable stir-fry served over fluffy basmati rice for a quick weeknight dinner.",
-    prep_time: "20 min",
-    cook_time: "20 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 6,
-    macros: {
-      calories: 1200,
-      protein_g: 100,
-      carbs_g: 130,
-      fat_g: 25
+    "name": "Spiced Chicken Skewers",
+    "description": "Tender chicken skewers marinated in aromatic spices.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.5,
+    "tags": ["chicken", "bbq", "high-protein"],
+    "macros_per_serving": {
+      "calories": 350,
+      "protein_g": 35,
+      "carbs_g": 5,
+      "fat_g": 12
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Red bell pepper", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Carrot", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Spring onions", quantity: 4, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken breast fillets", quantity: 450, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Basmati rice", quantity: 220, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Soy sauce", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Oyster sauce", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Rapeseed oil", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Garlic paste", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Ginger paste", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Chilli flakes", quantity: 3, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Rinse basmati rice and cook according to packet instructions, then fluff and keep warm.",
-      "Slice chicken breasts into thin strips and mix with half the soy sauce, garlic paste, and ginger paste.",
-      "Slice red bell pepper and carrot into thin strips and finely slice spring onions.",
-      "Heat rapeseed oil in a large wok over high heat and stir-fry the chicken until browned and cooked through, then remove to a plate.",
-      "Add peppers, carrot, and most of the spring onions to the wok and stir-fry for 4–5 minutes until tender-crisp.",
-      "Return chicken to the wok, add remaining soy sauce, oyster sauce, and a splash of water, then toss to coat and heat through.",
-      "Garnish with remaining spring onions and serve immediately."
-    ],
-    tips: "Use a frozen stir-fry vegetable mix to cut prep time. Cook extra rice to keep chilled for future quick dinners."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "cubed"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for marinade"
+      },
+      {
+        "name": "Paprika",
+        "quantity_per_serving": 2,
+        "unit": "g",
+        "category": "spice",
+        "notes": "smoked if possible"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      },
+      {
+        "name": "Lemon Juice",
+        "quantity_per_serving": 5,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "fresh"
+      }
+    ]
   },
   {
-    id: "beef-mince-pasta-bake",
-    name: "Beef Mince Pasta Bake",
-    emoji: "🍝",
-    description: "Comforting lean beef mince pasta bake with tomato sauce, vegetables, and a light cheese topping.",
-    prep_time: "20 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 8,
-    macros: {
-      calories: 1400,
-      protein_g: 110,
-      carbs_g: 140,
-      fat_g: 35
+    "name": "Lemon Herb Chicken Traybake",
+    "description": "One-pan roasted chicken with potatoes and mixed vegetables in a lemon herb marinade.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["chicken", "traybake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 520,
+      "protein_g": 42,
+      "carbs_g": 40,
+      "fat_g": 18
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Red bell pepper", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Chestnut mushrooms", quantity: 150, unit: "g" }
-      ],
-      protein: [
-        { category: "protein", name: "Beef steak mince 5% fat", quantity: 500, unit: "g" },
-        { category: "protein", name: "Cheddar cheese", quantity: 40, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Penne pasta", quantity: 200, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Chopped tomatoes", quantity: 400, unit: "g" },
-        { category: "pantry", name: "Tomato passata", quantity: 200, unit: "ml" },
-        { category: "pantry", name: "Tomato puree", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Dried oregano", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Dried Italian seasoning", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Smoked paprika", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Olive oil", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook penne pasta in salted water until al dente, then drain and set aside.",
-      "Heat olive oil in a large pan and cook chopped onion and red bell pepper for 4–5 minutes until softened.",
-      "Add minced garlic and cook for 1 minute until fragrant.",
-      "Add beef steak mince and cook until browned, breaking it into small pieces.",
-      "Stir in tomato puree, chopped tomatoes, tomato passata, and seasonings, then simmer.",
-      "Stir cooked pasta into the sauce, transfer to a dish, top with cheese, and bake."
-    ],
-    tips: "Batch cook and freeze individual portions for easy future dinners."
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "skinless, bone-in or boneless"
+      },
+      {
+        "name": "Baby Potatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "carb",
+        "notes": "halved"
+      },
+      {
+        "name": "Carrots",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Green Beans",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "trimmed"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      },
+      {
+        "name": "Lemon",
+        "quantity_per_serving": 0.25,
+        "unit": "whole",
+        "category": "veg",
+        "notes": "sliced, plus juice"
+      },
+      {
+        "name": "Dried Mixed Herbs",
+        "quantity_per_serving": 1,
+        "unit": "g",
+        "category": "spice",
+        "notes": "Italian or mixed herbs"
+      }
+    ]
   },
   {
-    id: "salmon-sweet-potato-traybake",
-    name: "Salmon with Sweet Potato & Greens Traybake",
-    emoji: "🐟",
-    description: "Omega-3 rich salmon traybake with roasted sweet potatoes and tenderstem broccoli for a balanced, high-protein meal.",
-    prep_time: "15 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 4,
-    macros: {
-      calories: 1300,
-      protein_g: 90,
-      carbs_g: 100,
-      fat_g: 50
+    "name": "Chicken Fajita Bowl",
+    "description": "Fajita-spiced chicken served over rice with peppers, onions, and a yoghurt drizzle.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "mexican", "high-protein", "bowl"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 45,
+      "carbs_g": 55,
+      "fat_g": 16
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Sweet potatoes", quantity: 450, unit: "g" },
-        { category: "produce", name: "Tenderstem broccoli", quantity: 200, unit: "g" },
-        { category: "produce", name: "Red onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Lemon", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Salmon fillets", quantity: 400, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [],
-      pantry: [
-        { category: "pantry", name: "Olive oil", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Honey", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Smoked paprika", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Dried mixed herbs", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Preheat oven to 200 °C and line a large baking tray.",
-      "Toss cubed sweet potatoes and red onion wedges with half the olive oil and spices, roast for 15 minutes.",
-      "Place salmon fillets on top, drizzle with remaining oil, honey, and lemon juice. Add tenderstem broccoli.",
-      "Roast for a further 12-15 minutes until salmon is cooked through."
-    ],
-    tips: "Leftover salmon is excellent flaked into salads or wraps for the next day."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "sliced"
+      },
+      {
+        "name": "Brown Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Green Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Fajita Seasoning",
+        "quantity_per_serving": 4,
+        "unit": "g",
+        "category": "spice",
+        "notes": "shop-bought or homemade"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for topping"
+      }
+    ]
   },
   {
-    id: "chicken-fajita-traybake-wraps",
-    name: "Chicken Fajita Traybake Wraps",
-    emoji: "🌯",
-    description: "Tray-roasted fajita chicken with peppers and onions, served in soft tortillas with yoghurt and salsa.",
-    prep_time: "15 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 6,
-    macros: {
-      calories: 1300,
-      protein_g: 100,
-      carbs_g: 120,
-      fat_g: 30
+    "name": "Honey Mustard Chicken Thighs",
+    "description": "Oven-baked chicken thighs in a honey mustard glaze with roasted veg.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["chicken", "traybake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 40,
+      "carbs_g": 35,
+      "fat_g": 24
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Mixed bell peppers", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken breast fillets", quantity: 500, unit: "g" }
-      ],
-      dairy: [
-        { category: "dairy", name: "Natural yoghurt", quantity: 120, unit: "g" }
-      ],
-      carbs: [
-        { category: "carbs", name: "Medium flour tortillas", quantity: 5, unit: "piece" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Fajita seasoning", quantity: 30, unit: "g" },
-        { category: "pantry", name: "Chopped tomatoes", quantity: 200, unit: "g" },
-        { category: "pantry", name: "Salsa", quantity: 1, unit: "jar" },
-        { category: "pantry", name: "Olive oil", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Preheat oven to 200 °C and line a large baking tray.",
-      "Toss sliced chicken, peppers, onion with olive oil and fajita seasoning, roast for 20-25 minutes.",
-      "Serve warm with flour tortillas, yoghurt, and salsa."
-    ],
-    tips: "Marinate the chicken and vegetables earlier in the day for more flavour."
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 180,
+        "unit": "g",
+        "category": "protein",
+        "notes": "skinless"
+      },
+      {
+        "name": "Broccoli",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "veg",
+        "notes": "florets"
+      },
+      {
+        "name": "Carrots",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "batons"
+      },
+      {
+        "name": "New Potatoes",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "carb",
+        "notes": "quartered"
+      },
+      {
+        "name": "Honey",
+        "quantity_per_serving": 8,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "mixed into glaze"
+      },
+      {
+        "name": "Wholegrain Mustard",
+        "quantity_per_serving": 6,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "mixed into glaze"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      }
+    ]
   },
   {
-    id: "egg-prawn-fried-rice-bowls",
-    name: "Egg & Prawn Fried Rice Bowls",
-    emoji: "🍤",
-    description: "Fast wok-fried rice with prawns, eggs, peas, and mixed vegetables for a macro-friendly high-protein dinner.",
-    prep_time: "10 min",
-    cook_time: "15 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 4,
-    macros: {
-      calories: 1100,
-      protein_g: 80,
-      carbs_g: 120,
-      fat_g: 25
+    "name": "Chicken and Veg Stir-Fry",
+    "description": "Quick stir-fried chicken with mixed vegetables and soy-garlic sauce over rice.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.7,
+    "tags": ["chicken", "stir-fry", "high-protein", "quick"],
+    "macros_per_serving": {
+      "calories": 490,
+      "protein_g": 38,
+      "carbs_g": 55,
+      "fat_g": 12
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 3, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Raw peeled prawns", quantity: 250, unit: "g" },
-        { category: "protein", name: "Eggs", quantity: 5, unit: "piece" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Cooked chilled rice", quantity: 350, unit: "g" },
-        { category: "carbs", name: "Frozen peas", quantity: 120, unit: "g" },
-        { category: "carbs", name: "Frozen mixed vegetables", quantity: 120, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Soy sauce", quantity: 45, unit: "ml" },
-        { category: "pantry", name: "Sesame oil", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Rapeseed oil", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Chilli flakes", quantity: 5, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Use fully cooled cooked rice and break up any clumps with a fork.",
-      "Finely chop the onion and mince the garlic.",
-      "Heat half the rapeseed oil in a large wok, beat the eggs, scramble until just set, then remove and set aside.",
-      "Add remaining rapeseed oil to the wok and sauté onion and garlic for 1–2 minutes until softened.",
-      "Add prawns and cook until they turn pink and opaque.",
-      "Add frozen peas and mixed vegetables and stir-fry for 2–3 minutes until heated through.",
-      "Add rice and stir-fry on high heat for 3–4 minutes, then stir in soy sauce and sesame oil.",
-      "Return scrambled eggs to the wok and toss to combine, seasoning with chilli flakes to taste."
-    ],
-    tips: "Cook extra rice earlier in the week and refrigerate it for quick fried rice. You can replace prawns with leftover chicken or tofu for variation."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "thinly sliced"
+      },
+      {
+        "name": "Stir-Fry Veg Mix",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "veg",
+        "notes": "bag of mixed stir-fry vegetables"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "reduced salt if preferred"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      },
+      {
+        "name": "Ginger",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "grated"
+      },
+      {
+        "name": "Sunflower Oil",
+        "quantity_per_serving": 5,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for stir-frying"
+      },
+      {
+        "name": "Basmati Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
   },
   {
-    id: "greek-chicken-pitta-bowls",
-    name: "Greek-Style Chicken Pitta Bowls",
-    emoji: "🥙",
-    description: "Marinated chicken with roasted potatoes, fresh salad, and yoghurt-garlic dressing served with wholemeal pittas.",
-    prep_time: "20 min",
-    cook_time: "30 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 6,
-    macros: {
-      calories: 1300,
-      protein_g: 100,
-      carbs_g: 130,
-      fat_g: 30
+    "name": "Peri-Peri Chicken and Wedges",
+    "description": "Spicy peri-peri chicken with oven-baked potato wedges and a side salad.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "high-protein", "spicy"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 45,
+      "carbs_g": 60,
+      "fat_g": 20
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Cucumber", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Tomatoes", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Red onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Lemon", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken breast fillets", quantity: 500, unit: "g" }
-      ],
-      dairy: [
-        { category: "dairy", name: "Greek yoghurt", quantity: 150, unit: "g" }
-      ],
-      carbs: [
-        { category: "carbs", name: "Baby or white potatoes", quantity: 450, unit: "g" },
-        { category: "carbs", name: "Wholemeal pittas", quantity: 3, unit: "piece" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Dried oregano", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Dried mint", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Olive oil", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Preheat oven to 200 °C.",
-      "Cut potatoes into wedges and toss with half the olive oil, salt, black pepper, and half the dried oregano, then spread on a baking tray.",
-      "Roast potatoes for 25–30 minutes until golden and tender, turning once halfway.",
-      "Cut chicken into chunks and marinate with remaining olive oil, lemon juice, remaining dried oregano, minced garlic, salt, and black pepper.",
-      "After potatoes have roasted for 10 minutes, place chicken on a separate tray and roast for 15–18 minutes until cooked through.",
-      "Mix Greek yoghurt with minced garlic, a little lemon juice, dried mint, salt, and black pepper to make a dressing.",
-      "Chop cucumber and tomatoes and thinly slice red onion, then toss with a little salt and lemon juice.",
-      "Warm pittas in the oven for the final 3–4 minutes.",
-      "Build bowls with roasted potatoes, salad, chicken, and yoghurt dressing."
-    ],
-    tips: "Marinate the chicken the night before for deeper flavour. Swap white potatoes for sweet potatoes using the same method if you prefer."
+    "ingredients": [
+      {
+        "name": "Chicken Legs or Thighs",
+        "quantity_per_serving": 190,
+        "unit": "g",
+        "category": "protein",
+        "notes": "skinless if preferred"
+      },
+      {
+        "name": "Potatoes",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "carb",
+        "notes": "cut into wedges"
+      },
+      {
+        "name": "Peri-Peri Marinade",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "bottled sauce or paste"
+      },
+      {
+        "name": "Mixed Salad Leaves",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "washed"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for wedges and salad"
+      }
+    ]
   },
   {
-    id: "beef-lentil-chilli-rice",
-    name: "Beef & Lentil Chilli with Rice",
-    emoji: "🍛",
-    description: "Hearty lean beef and red lentil chilli with beans served over rice for a high-protein, filling dinner.",
-    prep_time: "20 min",
-    cook_time: "30 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 8,
-    macros: {
-      calories: 1400,
-      protein_g: 110,
-      carbs_g: 150,
-      fat_g: 25
+    "name": "Chicken Tikka Traybake",
+    "description": "All-in-one traybake with tikka-marinated chicken, peppers, onions and potatoes.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "indian", "traybake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 44,
+      "carbs_g": 50,
+      "fat_g": 18
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Red bell pepper", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Beef steak mince 5% fat", quantity: 500, unit: "g" },
-        { category: "protein", name: "Red lentils", quantity: 120, unit: "g" },
-        { category: "protein", name: "Kidney beans", quantity: 1, unit: "tin" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Long grain rice", quantity: 220, unit: "g" },
-        { category: "carbs", name: "Chopped tomatoes", quantity: 400, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Tomato puree", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Beef stock", quantity: 300, unit: "ml" },
-        { category: "pantry", name: "Ground cumin", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Smoked paprika", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Chilli powder", quantity: 7, unit: "g" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook rice according to package instructions and keep warm.",
-      "Chop the onion and pepper and mince the garlic.",
-      "In a large pot, sauté onion and pepper in a little oil for 5–6 minutes until softened, then add garlic and cook for 1 minute.",
-      "Add beef mince and cook until browned, breaking it into small pieces.",
-      "Stir in tomato puree, ground cumin, smoked paprika, and chilli powder and cook for 1 minute.",
-      "Add chopped tomatoes, rinsed red lentils, drained kidney beans, and beef stock, then bring to a boil.",
-      "Reduce heat and simmer gently for 25–30 minutes until lentils are tender and the chilli has thickened, stirring occasionally.",
-      "Season with salt and black pepper and adjust chilli powder to taste.",
-      "Serve over rice."
-    ],
-    tips: "Chilli freezes very well. Double the recipe once, portion it into containers, and freeze for future quick dinners."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "chunks"
+      },
+      {
+        "name": "Tikka Curry Paste",
+        "quantity_per_serving": 15,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "mixed with yoghurt"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for marinade"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "wedges"
+      },
+      {
+        "name": "Mixed Peppers",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Potatoes",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "carb",
+        "notes": "chunks"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for tray"
+      }
+    ]
   },
   {
-    id: "turkey-bolognese-wholewheat-pasta",
-    name: "Turkey Bolognese with Wholewheat Pasta",
-    emoji: "🍝",
-    description: "Lean turkey mince cooked in a rich tomato sauce and served over wholewheat pasta for a lighter take on bolognese.",
-    prep_time: "20 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 8,
-    macros: {
-      calories: 1200,
-      protein_g: 100,
-      carbs_g: 130,
-      fat_g: 20
+    "name": "Garlic Butter Chicken with Greens",
+    "description": "Pan-seared chicken breast in a light garlic butter sauce with green veg.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["chicken", "high-protein", "low-carb"],
+    "macros_per_serving": {
+      "calories": 430,
+      "protein_g": 45,
+      "carbs_g": 10,
+      "fat_g": 22
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Carrot", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Celery stick", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 2, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Turkey mince 5% fat", quantity: 500, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Wholewheat spaghetti or penne", quantity: 200, unit: "g" },
-        { category: "carbs", name: "Chopped tomatoes", quantity: 400, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Tomato puree", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Vegetable stock", quantity: 200, unit: "ml" },
-        { category: "pantry", name: "Dried oregano", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Dried basil", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Olive oil", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook wholewheat pasta according to packet instructions, then drain and set aside.",
-      "Finely chop onion, carrot, and celery and mince the garlic.",
-      "Heat olive oil in a large pan and cook the vegetables for 6–7 minutes until softened.",
-      "Add turkey mince and cook until browned, breaking it up with a spoon.",
-      "Stir in tomato puree and cook for 1 minute, then add chopped tomatoes, vegetable stock, dried oregano, and dried basil.",
-      "Simmer for 15–20 minutes until the sauce thickens and flavours combine.",
-      "Season with salt and black pepper to taste.",
-      "Serve the bolognese over pasta."
-    ],
-    tips: "Make a double batch of the bolognese sauce and freeze half for another night. You can add lentils to the sauce for extra fibre and protein."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "whole or halved"
+      },
+      {
+        "name": "Tenderstem Broccoli",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "veg",
+        "notes": "trimmed"
+      },
+      {
+        "name": "Green Beans",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "trimmed"
+      },
+      {
+        "name": "Butter",
+        "quantity_per_serving": 8,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely chopped"
+      },
+      {
+        "name": "Lemon Juice",
+        "quantity_per_serving": 5,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "to finish"
+      }
+    ]
   },
   {
-    id: "chicken-tikka-masala-rice",
-    name: "Chicken Tikka Masala with Rice",
-    emoji: "🍛",
-    description: "Creamy-style chicken tikka masala lightened with yoghurt, served with fluffy basmati rice.",
-    prep_time: "25 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 6,
-    macros: {
-      calories: 1300,
-      protein_g: 100,
-      carbs_g: 130,
-      fat_g: 30
+    "name": "Creamy Chicken and Mushroom Pasta",
+    "description": "High-protein creamy chicken pasta with mushrooms and spinach.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["chicken", "pasta", "high-protein"],
+    "macros_per_serving": {
+      "calories": 650,
+      "protein_g": 45,
+      "carbs_g": 70,
+      "fat_g": 18
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 3, unit: "piece" },
-        { category: "produce", name: "Fresh ginger piece", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken breast fillets", quantity: 500, unit: "g" },
-        { category: "protein", name: "Greek yoghurt", quantity: 150, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Basmati rice", quantity: 220, unit: "g" },
-        { category: "carbs", name: "Chopped tomatoes", quantity: 400, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Tomato puree", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Tikka masala spice mix", quantity: 20, unit: "g" },
-        { category: "pantry", name: "Garam masala", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Rapeseed oil", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook basmati rice according to packet instructions and keep warm.",
-      "Dice chicken into bite-sized pieces.",
-      "Mix half the Greek yoghurt with half the tikka masala spice mix and a pinch of salt, then coat the chicken and set aside while you prepare the sauce.",
-      "Finely chop the onion and mince the garlic and ginger.",
-      "Heat rapeseed oil in a large pan and cook the onion for 5–6 minutes until softened.",
-      "Add garlic, ginger, remaining tikka masala spice mix, and garam masala and cook for 1–2 minutes until fragrant.",
-      "Stir in tomato puree and chopped tomatoes and simmer for 5 minutes.",
-      "Add marinated chicken pieces to the sauce and cook for 12–15 minutes until the chicken is cooked through.",
-      "Stir in the remaining Greek yoghurt off the heat to create a creamy texture and season with salt and black pepper.",
-      "Serve over rice."
-    ],
-    tips: "Marinate the chicken in yoghurt and spices earlier in the day for better flavour. Serve with steamed green vegetables for extra fibre."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "strips"
+      },
+      {
+        "name": "Wholewheat Pasta",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Mushrooms",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Spinach",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "fresh"
+      },
+      {
+        "name": "Light Cream Cheese",
+        "quantity_per_serving": 25,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "stirred into sauce"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      }
+    ]
   },
   {
-    id: "lemon-herb-cod-veg-traybake",
-    name: "Lemon Herb Cod with Roasted Vegetables",
-    emoji: "🐟",
-    description: "Light baked cod fillets with a mix of roasted vegetables and a lemon-herb drizzle.",
-    prep_time: "15 min",
-    cook_time: "20 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 4,
-    macros: {
-      calories: 800,
-      protein_g: 65,
-      carbs_g: 60,
-      fat_g: 20
+    "name": "Pesto Chicken and Roasted Veg",
+    "description": "Oven-baked pesto chicken breasts with a medley of roasted veg.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.2,
+    "tags": ["chicken", "mediterranean", "high-protein"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 43,
+      "carbs_g": 25,
+      "fat_g": 26
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Carrots", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Courgette", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Red onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Cherry tomatoes", quantity: 150, unit: "g" },
-        { category: "produce", name: "Lemon", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Cod fillets", quantity: 300, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [],
-      pantry: [
-        { category: "pantry", name: "Olive oil", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Dried mixed herbs", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Garlic granules", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Preheat oven to 190 °C (170 °C fan) and line a baking tray with foil.",
-      "Slice carrots and courgette into batons and cut red onion into wedges.",
-      "Toss carrots, courgette, red onion, and cherry tomatoes with half the olive oil, dried mixed herbs, salt, and black pepper.",
-      "Spread vegetables on the tray and roast for 10 minutes.",
-      "Season cod fillets with garlic granules, salt, and black pepper.",
-      "Place cod on top of the vegetables and drizzle with remaining olive oil and half the lemon juice.",
-      "Roast for a further 10–12 minutes until cod flakes easily and vegetables are tender.",
-      "Serve vegetables and cod onto plates.",
-      "Squeeze remaining lemon juice over both portions before serving."
-    ],
-    tips: "Use frozen cod fillets for convenience; defrost them in the fridge beforehand. Add a small side of boiled potatoes if you want extra carbs."
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "whole"
+      },
+      {
+        "name": "Green Pesto",
+        "quantity_per_serving": 18,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "spread on chicken"
+      },
+      {
+        "name": "Courgette",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "wedges"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "whole"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      }
+    ]
   },
   {
-    id: "chicken-veg-sheet-pan-dinner",
-    name: "Chicken & Veg Sheet-Pan Dinner",
-    emoji: "🍗",
-    description: "Simple sheet-pan chicken with mixed vegetables and potatoes for an easy, hands-off dinner.",
-    prep_time: "15 min",
-    cook_time: "35 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 6,
-    macros: {
-      calories: 1100,
-      protein_g: 90,
-      carbs_g: 90,
-      fat_g: 35
+    "name": "Turkey Bolognese with Wholewheat Pasta",
+    "description": "Lean turkey mince cooked in a rich tomato sauce with wholewheat pasta.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["turkey", "pasta", "high-protein"],
+    "macros_per_serving": {
+      "calories": 610,
+      "protein_g": 46,
+      "carbs_g": 70,
+      "fat_g": 16
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Baby potatoes", quantity: 450, unit: "g" },
-        { category: "produce", name: "Carrots", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Green beans", quantity: 150, unit: "g" },
-        { category: "produce", name: "Red onion", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken thighs, skinless", quantity: 500, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [],
-      pantry: [
-        { category: "pantry", name: "Olive oil", quantity: 30, unit: "ml" },
-        { category: "pantry", name: "Dried thyme", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Garlic granules", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Paprika", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Preheat oven to 200 °C (180 °C fan) and line a large baking tray.",
-      "Halve or quarter baby potatoes and slice carrots into batons.",
-      "Toss potatoes, carrots, green beans, and sliced red onion with half the olive oil, dried thyme, garlic granules, paprika, salt, and black pepper.",
-      "Spread vegetables on the tray in an even layer.",
-      "Place chicken thighs on top, drizzle with remaining olive oil, and season lightly with salt and pepper.",
-      "Roast for 30–35 minutes until chicken is cooked through and potatoes are crisp and tender, turning vegetables once halfway.",
-      "Rest for a few minutes, then portion."
-    ],
-    tips: "Use pre-chopped mixed veg to save time. This recipe is flexible, so swap in other vegetables you have on hand like courgette or peppers."
+    "ingredients": [
+      {
+        "name": "Turkey Mince 5% Fat",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "lean"
+      },
+      {
+        "name": "Wholewheat Pasta",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely chopped"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely diced"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      },
+      {
+        "name": "Tomato Puree",
+        "quantity_per_serving": 8,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "for richness"
+      }
+    ]
   },
   {
-    id: "lentil-chickpea-veggie-curry",
-    name: "Lentil & Chickpea Veggie Curry",
-    emoji: "🥘",
-    description: "High-fibre vegetarian curry with red lentils, chickpeas, and mixed vegetables served with rice.",
-    prep_time: "20 min",
-    cook_time: "25 min",
-    servings: 2,
-    min_servings: 2,
-    max_servings: 8,
-    macros: {
-      calories: 1200,
-      protein_g: 50,
-      carbs_g: 180,
-      fat_g: 20
+    "name": "Beef and Pepper Stir-Fry",
+    "description": "Lean beef strips quickly stir-fried with peppers and onions over rice.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.4,
+    "tags": ["beef", "stir-fry", "high-protein", "quick"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 42,
+      "carbs_g": 55,
+      "fat_g": 16
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Brown onion", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Carrot", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Red bell pepper", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 2, unit: "piece" },
-        { category: "produce", name: "Fresh ginger piece", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Red lentils", quantity: 120, unit: "g" },
-        { category: "protein", name: "Chickpeas", quantity: 1, unit: "tin" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Basmati rice", quantity: 220, unit: "g" },
-        { category: "carbs", name: "Chopped tomatoes", quantity: 400, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Coconut milk light", quantity: 200, unit: "ml" },
-        { category: "pantry", name: "Curry powder", quantity: 15, unit: "g" },
-        { category: "pantry", name: "Ground cumin", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Rapeseed oil", quantity: 15, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook basmati rice according to packet instructions and keep warm.",
-      "Finely chop onion and carrot and dice the red bell pepper, then mince the garlic and ginger.",
-      "Heat rapeseed oil in a large pan and cook onion and carrot for 5–6 minutes until softened.",
-      "Add garlic, ginger, curry powder, and ground cumin and cook for 1–2 minutes until fragrant.",
-      "Stir in red lentils, chopped tomatoes, coconut milk, and drained chickpeas.",
-      "Bring to a simmer and cook for 15–20 minutes until lentils are tender and the curry has thickened, stirring occasionally.",
-      "Season with salt and black pepper to taste.",
-      "Serve curry over rice."
-    ],
-    tips: "This curry tastes even better the next day, so make extra for lunches. You can add spinach or frozen peas near the end for more greens."
+    "ingredients": [
+      {
+        "name": "Beef Stir-Fry Strips",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "lean"
+      },
+      {
+        "name": "Mixed Peppers",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      },
+      {
+        "name": "Sunflower Oil",
+        "quantity_per_serving": 5,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for frying"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
   },
   {
-    id: "tofu-veggie-stir-fry-noodles",
-    name: "Tofu Veggie Stir-Fry with Noodles",
-    emoji: "🥡",
-    description: "Vegetarian stir-fry with crispy tofu, mixed vegetables, and egg noodles in a savoury soy-ginger sauce.",
-    prep_time: "20 min",
-    cook_time: "15 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 4,
-    macros: {
-      calories: 1000,
-      protein_g: 45,
-      carbs_g: 130,
-      fat_g: 25
+    "name": "Beef Chilli with Kidney Beans",
+    "description": "Hearty lean beef chilli with kidney beans, served with rice.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 35,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["beef", "chilli", "high-protein", "batch-cook"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 45,
+      "carbs_g": 70,
+      "fat_g": 18
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Broccoli florets", quantity: 150, unit: "g" },
-        { category: "produce", name: "Carrot", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Red bell pepper", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Spring onions", quantity: 3, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Firm tofu", quantity: 300, unit: "g" }
-      ],
-      dairy: [],
-      carbs: [
-        { category: "carbs", name: "Egg noodles", quantity: 150, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Soy sauce", quantity: 40, unit: "ml" },
-        { category: "pantry", name: "Sweet chilli sauce", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Garlic paste", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Ginger paste", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Sesame oil", quantity: 10, unit: "ml" },
-        { category: "pantry", name: "Rapeseed oil", quantity: 20, unit: "ml" }
-      ],
-      other: []
-    },
-    instructions: [
-      "Cook egg noodles according to packet instructions, drain, and set aside.",
-      "Press firm tofu to remove excess moisture, then cut into cubes.",
-      "Toss tofu cubes with half the soy sauce and set aside while you chop vegetables.",
-      "Slice carrot and red pepper into thin strips and cut broccoli into small florets, then slice spring onions.",
-      "Heat rapeseed oil in a large wok and fry tofu cubes until golden on all sides, then remove and set aside.",
-      "In the same wok, stir-fry broccoli, carrot, and red pepper for 4–5 minutes until tender-crisp.",
-      "Add garlic paste and ginger paste and cook for 1 minute, then return tofu to the wok.",
-      "Add cooked noodles, remaining soy sauce, sweet chilli sauce, and sesame oil, then toss everything together until hot."
-    ],
-    tips: "Use pre-cut stir-fry vegetables to reduce prep time. For a vegan version, use wheat noodles instead of egg noodles."
+    "ingredients": [
+      {
+        "name": "Beef Mince 5% Fat",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "lean"
+      },
+      {
+        "name": "Kidney Beans",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "protein",
+        "notes": "drained weight"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Chilli Powder",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "spice",
+        "notes": "to taste"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
   },
   {
-    id: "chicken-caesar-style-rice-bowl",
-    name: "Chicken Caesar-Style Rice Bowl",
-    emoji: "🥗",
-    description: "Deconstructed Caesar-style bowl with grilled chicken, rice, crunchy lettuce, and a yoghurt-based dressing.",
-    prep_time: "20 min",
-    cook_time: "20 min",
-    servings: 2,
-    min_servings: 1,
-    max_servings: 4,
-    macros: {
-      calories: 1100,
-      protein_g: 90,
-      carbs_g: 110,
-      fat_g: 25
+    "name": "Beef Cottage Pie with Sweet Potato Mash",
+    "description": "Lean beef mince with veg in gravy topped with sweet potato mash.",
+    "prep_time_mins": 25,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.2,
+    "tags": ["beef", "bake", "high-protein", "comfort"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 40,
+      "carbs_g": 65,
+      "fat_g": 18
     },
-    ingredients: {
-      produce: [
-        { category: "produce", name: "Romaine lettuce", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Cherry tomatoes", quantity: 120, unit: "g" },
-        { category: "produce", name: "Cucumber", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Garlic cloves", quantity: 1, unit: "piece" },
-        { category: "produce", name: "Lemon", quantity: 1, unit: "piece" }
-      ],
-      protein: [
-        { category: "protein", name: "Chicken breast fillets", quantity: 400, unit: "g" }
-      ],
-      dairy: [
-        { category: "dairy", name: "Greek yoghurt", quantity: 100, unit: "g" },
-        { category: "dairy", name: "Parmesan cheese", quantity: 20, unit: "g" }
-      ],
-      carbs: [
-        { category: "carbs", name: "Basmati rice", quantity: 200, unit: "g" }
-      ],
-      pantry: [
-        { category: "pantry", name: "Olive oil", quantity: 20, unit: "ml" },
-        { category: "pantry", name: "Dijon mustard", quantity: 10, unit: "g" },
-        { category: "pantry", name: "Worcestershire sauce", quantity: 5, unit: "ml" },
-        { category: "pantry", name: "Salt", quantity: 5, unit: "g" },
-        { category: "pantry", name: "Black pepper", quantity: 2, unit: "g" }
-      ],
-      other: []
+    "ingredients": [
+      {
+        "name": "Beef Mince 5% Fat",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "browned"
+      },
+      {
+        "name": "Sweet Potato",
+        "quantity_per_serving": 180,
+        "unit": "g",
+        "category": "carb",
+        "notes": "for mash"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Frozen Peas",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "stirred into filling"
+      },
+      {
+        "name": "Beef Stock",
+        "quantity_per_serving": 80,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "made from cube"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      }
+    ]
+  },
+  {
+    "name": "Steak, Potatoes and Green Beans",
+    "description": "Pan-fried steak with roasted potatoes and green beans.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 4.5,
+    "tags": ["beef", "high-protein", "simple"],
+    "macros_per_serving": {
+      "calories": 650,
+      "protein_g": 48,
+      "carbs_g": 50,
+      "fat_g": 26
     },
-    instructions: [
-      "Cook basmati rice according to packet instructions and keep warm.",
-      "Season chicken breasts with salt, black pepper, and a little olive oil.",
-      "Grill or pan-fry chicken for 6–7 minutes per side until cooked through, then rest and slice.",
-      "Chop romaine lettuce and cucumber, and halve cherry tomatoes.",
-      "Mix Greek yoghurt, grated parmesan, minced garlic, lemon juice, Dijon mustard, and Worcestershire sauce to make the Caesar dressing. Season with salt and black pepper.",
-      "Assemble bowls by placing rice at the bottom, then topping with lettuce, tomatoes, cucumber, and sliced chicken.",
-      "Drizzle Caesar dressing over the bowls and garnish with extra parmesan."
-    ],
-    tips: "Use precooked chicken breasts or leftover roast chicken to make this extremely fast. Swap rice for croutons for a classic salad style."
+    "ingredients": [
+      {
+        "name": "Rump or Sirloin Steak",
+        "quantity_per_serving": 180,
+        "unit": "g",
+        "category": "protein",
+        "notes": "room temperature"
+      },
+      {
+        "name": "Potatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "carb",
+        "notes": "cubed for roasting"
+      },
+      {
+        "name": "Green Beans",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "steamed or boiled"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for steak and potatoes"
+      },
+      {
+        "name": "Butter",
+        "quantity_per_serving": 5,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "optional for basting"
+      }
+    ]
+  },
+  {
+    "name": "Pork Loin with Apple and Cabbage",
+    "description": "Pan-seared pork loin steaks with sautéed apple and cabbage.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["pork", "high-protein", "one-pan"],
+    "macros_per_serving": {
+      "calories": 520,
+      "protein_g": 42,
+      "carbs_g": 25,
+      "fat_g": 24
+    },
+    "ingredients": [
+      {
+        "name": "Pork Loin Steaks",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "trimmed of fat if desired"
+      },
+      {
+        "name": "Apple",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Shredded Cabbage",
+        "quantity_per_serving": 90,
+        "unit": "g",
+        "category": "veg",
+        "notes": "white or savoy"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for frying"
+      }
+    ]
+  },
+  {
+    "name": "Pork and Bean One-Pot",
+    "description": "Smoky pork and mixed beans simmered in a tomato sauce.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.7,
+    "tags": ["pork", "one-pot", "high-protein", "batch-cook"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 40,
+      "carbs_g": 50,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Pork Mince 5% Fat",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "browned"
+      },
+      {
+        "name": "Mixed Beans",
+        "quantity_per_serving": 100,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Smoked Paprika",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "spice",
+        "notes": "for smokiness"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      }
+    ]
+  },
+  {
+    "name": "Pork Stir-Fry with Noodles",
+    "description": "Lean pork strips stir-fried with veg and egg noodles in a soy-ginger sauce.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["pork", "stir-fry", "high-protein", "quick"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 38,
+      "carbs_g": 65,
+      "fat_g": 14
+    },
+    "ingredients": [
+      {
+        "name": "Pork Stir-Fry Strips",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "lean"
+      },
+      {
+        "name": "Egg Noodles",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Stir-Fry Veg Mix",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "veg",
+        "notes": "bag of mixed veg"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Ginger",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "grated"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      }
+    ]
+  },
+  {
+    "name": "Salmon, New Potatoes and Asparagus",
+    "description": "Oven-baked salmon fillets with new potatoes and asparagus.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 4.2,
+    "tags": ["salmon", "fish", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 42,
+      "carbs_g": 45,
+      "fat_g": 26
+    },
+    "ingredients": [
+      {
+        "name": "Salmon Fillet",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "skin on or off"
+      },
+      {
+        "name": "New Potatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "carb",
+        "notes": "halved"
+      },
+      {
+        "name": "Asparagus",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "veg",
+        "notes": "trimmed"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      },
+      {
+        "name": "Lemon",
+        "quantity_per_serving": 0.25,
+        "unit": "whole",
+        "category": "veg",
+        "notes": "slices for serving"
+      }
+    ]
+  },
+  {
+    "name": "Teriyaki Salmon Rice Bowl",
+    "description": "Pan-fried salmon glazed in teriyaki sauce over rice with steamed greens.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 4.0,
+    "tags": ["salmon", "bowl", "high-protein"],
+    "macros_per_serving": {
+      "calories": 610,
+      "protein_g": 40,
+      "carbs_g": 65,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Salmon Fillet",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "cut into large chunks"
+      },
+      {
+        "name": "Teriyaki Sauce",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "bottled"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Tenderstem Broccoli",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "steamed"
+      },
+      {
+        "name": "Spring Onions",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced to garnish"
+      }
+    ]
+  },
+  {
+    "name": "Fish Tacos with Slaw",
+    "description": "Crispy spiced white fish in tortillas with crunchy slaw and yoghurt sauce.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.2,
+    "tags": ["fish", "tacos", "high-protein"],
+    "macros_per_serving": {
+      "calories": 590,
+      "protein_g": 38,
+      "carbs_g": 60,
+      "fat_g": 19
+    },
+    "ingredients": [
+      {
+        "name": "White Fish Fillets",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "cod or pollock"
+      },
+      {
+        "name": "Soft Tortillas",
+        "quantity_per_serving": 2,
+        "unit": "medium",
+        "category": "carb",
+        "notes": "flour or corn"
+      },
+      {
+        "name": "Shredded Cabbage",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "for slaw"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "grated"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "mixed into sauce"
+      },
+      {
+        "name": "Lime",
+        "quantity_per_serving": 0.25,
+        "unit": "whole",
+        "category": "veg",
+        "notes": "juice for sauce"
+      },
+      {
+        "name": "Paprika",
+        "quantity_per_serving": 2,
+        "unit": "g",
+        "category": "spice",
+        "notes": "for fish coating"
+      }
+    ]
+  },
+  {
+    "name": "Baked Cod with Tomato and Olive",
+    "description": "Mediterranean-style baked cod with tomatoes, olives and potatoes.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.4,
+    "tags": ["fish", "bake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 520,
+      "protein_g": 38,
+      "carbs_g": 45,
+      "fat_g": 16
+    },
+    "ingredients": [
+      {
+        "name": "Cod Fillet",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "or other white fish"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Black Olives",
+        "quantity_per_serving": 15,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "pitted"
+      },
+      {
+        "name": "Potatoes",
+        "quantity_per_serving": 140,
+        "unit": "g",
+        "category": "carb",
+        "notes": "sliced"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for baking"
+      }
+    ]
+  },
+  {
+    "name": "Prawn and Pea Risotto",
+    "description": "Creamy risotto with king prawns, peas and parmesan.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.6,
+    "tags": ["prawn", "rice", "high-protein"],
+    "macros_per_serving": {
+      "calories": 610,
+      "protein_g": 40,
+      "carbs_g": 75,
+      "fat_g": 14
+    },
+    "ingredients": [
+      {
+        "name": "Raw King Prawns",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "peeled"
+      },
+      {
+        "name": "Risotto Rice",
+        "quantity_per_serving": 75,
+        "unit": "g",
+        "category": "carb",
+        "notes": "Arborio"
+      },
+      {
+        "name": "Frozen Peas",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "added near end"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely chopped"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 250,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "hot"
+      },
+      {
+        "name": "Parmesan",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "Tuna Steak Nicoise",
+    "description": "Seared tuna steak with potatoes, green beans, olives and eggs.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 4.5,
+    "tags": ["tuna", "salad", "high-protein"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 44,
+      "carbs_g": 40,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Fresh Tuna Steak",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "seared rare-medium"
+      },
+      {
+        "name": "New Potatoes",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "carb",
+        "notes": "boiled"
+      },
+      {
+        "name": "Green Beans",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "blanched"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "boiled and halved"
+      },
+      {
+        "name": "Black Olives",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "pitted"
+      },
+      {
+        "name": "Mixed Salad Leaves",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "for base"
+      }
+    ]
+  },
+  {
+    "name": "Lentil and Chicken Sausage Bake",
+    "description": "Chicken sausages baked over a bed of spiced lentils and vegetables.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["chicken", "sausage", "lentils", "high-protein"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 40,
+      "carbs_g": 45,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Sausages",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "protein",
+        "notes": "approx. 2 small sausages"
+      },
+      {
+        "name": "Cooked Green Lentils",
+        "quantity_per_serving": 100,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Celery",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 120,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for lentil base"
+      }
+    ]
+  },
+  {
+    "name": "Turkey Meatball Traybake",
+    "description": "Baked turkey meatballs with roast peppers, onions and courgette.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["turkey", "meatballs", "traybake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 44,
+      "carbs_g": 30,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Turkey Mince 5% Fat",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "formed into meatballs"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 0.5,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "for binding"
+      },
+      {
+        "name": "Breadcrumbs",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dried"
+      },
+      {
+        "name": "Courgette",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "wedges"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      }
+    ]
+  },
+  {
+    "name": "Chicken and Chickpea Curry",
+    "description": "Mild tomato-based chicken curry with chickpeas, served with rice.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["chicken", "curry", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 42,
+      "carbs_g": 70,
+      "fat_g": 16
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "chunks"
+      },
+      {
+        "name": "Chickpeas",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Curry Powder",
+        "quantity_per_serving": 4,
+        "unit": "g",
+        "category": "spice",
+        "notes": "mild or medium"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
+  },
+  {
+    "name": "Red Lentil Dahl with Chicken",
+    "description": "Spiced red lentil dahl topped with yoghurt and shredded chicken.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.5,
+    "tags": ["chicken", "lentils", "curry", "high-protein"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 40,
+      "carbs_g": 60,
+      "fat_g": 14
+    },
+    "ingredients": [
+      {
+        "name": "Cooked Shredded Chicken",
+        "quantity_per_serving": 100,
+        "unit": "g",
+        "category": "protein",
+        "notes": "leftover roast or poached"
+      },
+      {
+        "name": "Red Lentils",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "protein",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed"
+      },
+      {
+        "name": "Curry Powder",
+        "quantity_per_serving": 4,
+        "unit": "g",
+        "category": "spice",
+        "notes": "to taste"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 25,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for topping"
+      },
+      {
+        "name": "Vegetable Stock",
+        "quantity_per_serving": 250,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "hot"
+      }
+    ]
+  },
+  {
+    "name": "Greek Chicken Gyros Bowl",
+    "description": "Herbed chicken, rice, salad and tzatziki in a deconstructed gyros bowl.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "greek", "bowl", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 44,
+      "carbs_g": 65,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "marinated in herbs"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Cucumber",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "veg",
+        "notes": "thinly sliced"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for tzatziki"
+      },
+      {
+        "name": "Dried Oregano",
+        "quantity_per_serving": 1,
+        "unit": "g",
+        "category": "spice",
+        "notes": "for marinade"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Caesar Pasta Salad",
+    "description": "Chicken, pasta and romaine lettuce in a lighter Caesar-style dressing.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["chicken", "pasta", "salad", "high-protein"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 42,
+      "carbs_g": 70,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "grilled or pan-fried"
+      },
+      {
+        "name": "Pasta",
+        "quantity_per_serving": 75,
+        "unit": "g",
+        "category": "carb",
+        "notes": "short pasta shapes"
+      },
+      {
+        "name": "Romaine Lettuce",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chopped"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 25,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for dressing"
+      },
+      {
+        "name": "Parmesan",
+        "quantity_per_serving": 8,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "BBQ Chicken Flatbreads",
+    "description": "Shredded BBQ chicken on soft flatbreads with crunchy salad.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "flatbread", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 40,
+      "carbs_g": 70,
+      "fat_g": 16
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "cooked and shredded"
+      },
+      {
+        "name": "BBQ Sauce",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "mixed with chicken"
+      },
+      {
+        "name": "Flatbread",
+        "quantity_per_serving": 1,
+        "unit": "large",
+        "category": "carb",
+        "notes": "shop-bought"
+      },
+      {
+        "name": "Shredded Lettuce",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "for topping"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 15,
+        "unit": "g",
+        "category": "veg",
+        "notes": "thinly sliced"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Fried Rice",
+    "description": "High-protein chicken fried rice with peas, carrots and egg.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.6,
+    "tags": ["chicken", "rice", "stir-fry", "high-protein"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 38,
+      "carbs_g": 70,
+      "fat_g": 14
+    },
+    "ingredients": [
+      {
+        "name": "Cooked Chicken",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "diced"
+      },
+      {
+        "name": "Cooked Rice",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "carb",
+        "notes": "day-old if possible"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "scrambled into pan"
+      },
+      {
+        "name": "Frozen Peas and Carrots",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "mixed"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "to taste"
+      }
+    ]
+  },
+  {
+    "name": "Chicken and Spinach Orzo",
+    "description": "Creamy one-pan chicken and spinach orzo with parmesan.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["chicken", "one-pot", "high-protein"],
+    "macros_per_serving": {
+      "calories": 610,
+      "protein_g": 42,
+      "carbs_g": 70,
+      "fat_g": 16
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "diced"
+      },
+      {
+        "name": "Orzo Pasta",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Spinach",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "fresh"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 250,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "hot"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely chopped"
+      },
+      {
+        "name": "Parmesan",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "Harissa Chicken and Couscous",
+    "description": "Spicy harissa chicken with fluffy couscous and roasted vegetables.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "couscous", "high-protein"],
+    "macros_per_serving": {
+      "calories": 600,
+      "protein_g": 42,
+      "carbs_g": 65,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "boneless"
+      },
+      {
+        "name": "Harissa Paste",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "for marinade"
+      },
+      {
+        "name": "Couscous",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Courgette",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Shawarma Rice Bowl",
+    "description": "Spiced chicken with rice, salad and garlic yoghurt inspired by shawarma.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "middle-eastern", "bowl", "high-protein"],
+    "macros_per_serving": {
+      "calories": 630,
+      "protein_g": 44,
+      "carbs_g": 70,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "marinated in shawarma spices"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Cucumber",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Tomato",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Greek Yoghurt",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "mixed with garlic"
+      },
+      {
+        "name": "Garlic",
+        "quantity_per_serving": 2,
+        "unit": "g",
+        "category": "veg",
+        "notes": "crushed into yoghurt"
+      }
+    ]
+  },
+  {
+    "name": "Beef and Black Bean Burrito Bowl",
+    "description": "Spiced beef, black beans, rice and salsa in a burrito-style bowl.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.2,
+    "tags": ["beef", "bowl", "high-protein", "mexican"],
+    "macros_per_serving": {
+      "calories": 670,
+      "protein_g": 44,
+      "carbs_g": 75,
+      "fat_g": 20
+    },
+    "ingredients": [
+      {
+        "name": "Beef Mince 5% Fat",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "browned with spices"
+      },
+      {
+        "name": "Black Beans",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Salsa",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "jarred"
+      },
+      {
+        "name": "Sweetcorn",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "tinned"
+      },
+      {
+        "name": "Cheddar",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated, optional"
+      }
+    ]
+  },
+  {
+    "name": "Beef Stroganoff with Rice",
+    "description": "Creamy mushroom and beef stroganoff served over rice.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.3,
+    "tags": ["beef", "one-pot", "high-protein"],
+    "macros_per_serving": {
+      "calories": 650,
+      "protein_g": 44,
+      "carbs_g": 70,
+      "fat_g": 20
+    },
+    "ingredients": [
+      {
+        "name": "Beef Strips",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "lean"
+      },
+      {
+        "name": "Mushrooms",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Light Creme Fraiche",
+        "quantity_per_serving": 25,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Beef Stock",
+        "quantity_per_serving": 150,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
+  },
+  {
+    "name": "Pork and Apple Burgers",
+    "description": "Homemade pork and grated apple burgers served with salad and wedges.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["pork", "burgers", "high-protein"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 40,
+      "carbs_g": 65,
+      "fat_g": 24
+    },
+    "ingredients": [
+      {
+        "name": "Pork Mince 5% Fat",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "formed into patties"
+      },
+      {
+        "name": "Apple",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "grated into mince"
+      },
+      {
+        "name": "Burger Bun",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "carb",
+        "notes": "soft bun"
+      },
+      {
+        "name": "Potatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "carb",
+        "notes": "wedges"
+      },
+      {
+        "name": "Lettuce",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "veg",
+        "notes": "for burger"
+      },
+      {
+        "name": "Tomato",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "veg",
+        "notes": "slices for burger"
+      }
+    ]
+  },
+  {
+    "name": "Chorizo and Chicken Jambalaya",
+    "description": "Spiced rice dish with chicken, chorizo and peppers.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.4,
+    "tags": ["chicken", "chorizo", "rice", "high-protein"],
+    "macros_per_serving": {
+      "calories": 700,
+      "protein_g": 42,
+      "carbs_g": 80,
+      "fat_g": 24
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "chunks"
+      },
+      {
+        "name": "Chorizo",
+        "quantity_per_serving": 35,
+        "unit": "g",
+        "category": "protein",
+        "notes": "sliced"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Mixed Peppers",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 200,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for rice"
+      }
+    ]
+  },
+  {
+    "name": "Sausage, Bean and Kale Skillet",
+    "description": "One-pan chicken sausages with beans and kale in a tomato base.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.7,
+    "tags": ["sausage", "one-pot", "high-protein"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 36,
+      "carbs_g": 40,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Sausages",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "protein",
+        "notes": "sliced"
+      },
+      {
+        "name": "Cannellini Beans",
+        "quantity_per_serving": 90,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Kale",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chopped"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      }
+    ]
+  },
+  {
+    "name": "Veggie Lentil Bolognese with Parmesan",
+    "description": "Lentil-based bolognese sauce over pasta with a sprinkle of parmesan.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.3,
+    "tags": ["vegetarian", "lentils", "pasta", "high-protein"],
+    "macros_per_serving": {
+      "calories": 610,
+      "protein_g": 32,
+      "carbs_g": 80,
+      "fat_g": 12
+    },
+    "ingredients": [
+      {
+        "name": "Cooked Green Lentils",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Pasta",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "finely diced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Parmesan",
+        "quantity_per_serving": 8,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "Halloumi and Chickpea Traybake",
+    "description": "Roasted halloumi with chickpeas and vegetables in a one-pan bake.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["vegetarian", "halloumi", "traybake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 30,
+      "carbs_g": 40,
+      "fat_g": 32
+    },
+    "ingredients": [
+      {
+        "name": "Halloumi",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "protein",
+        "notes": "sliced"
+      },
+      {
+        "name": "Chickpeas",
+        "quantity_per_serving": 90,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Courgette",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "chunks"
+      },
+      {
+        "name": "Red Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "wedges"
+      },
+      {
+        "name": "Olive Oil",
+        "quantity_per_serving": 8,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for roasting"
+      }
+    ]
+  },
+  {
+    "name": "Paneer and Pea Curry",
+    "description": "Indian-style curry with paneer cubes and peas in a tomato-based sauce.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["vegetarian", "paneer", "curry", "high-protein"],
+    "macros_per_serving": {
+      "calories": 620,
+      "protein_g": 30,
+      "carbs_g": 45,
+      "fat_g": 30
+    },
+    "ingredients": [
+      {
+        "name": "Paneer",
+        "quantity_per_serving": 90,
+        "unit": "g",
+        "category": "protein",
+        "notes": "cubed"
+      },
+      {
+        "name": "Frozen Peas",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "added to sauce"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Curry Powder",
+        "quantity_per_serving": 4,
+        "unit": "g",
+        "category": "spice",
+        "notes": "to taste"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
+  },
+  {
+    "name": "Tofu Stir-Fry with Cashews",
+    "description": "Crispy tofu stir-fried with veg and cashews in a soy-garlic sauce.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["vegetarian", "tofu", "stir-fry", "high-protein"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 30,
+      "carbs_g": 45,
+      "fat_g": 24
+    },
+    "ingredients": [
+      {
+        "name": "Firm Tofu",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "pressed and cubed"
+      },
+      {
+        "name": "Cashew Nuts",
+        "quantity_per_serving": 15,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "unsalted"
+      },
+      {
+        "name": "Stir-Fry Veg Mix",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "veg",
+        "notes": "bag of veg"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
+  },
+  {
+    "name": "Quorn Mince Chilli",
+    "description": "High-protein vegetarian chilli made with Quorn mince and kidney beans.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.7,
+    "tags": ["vegetarian", "quorn", "chilli", "high-protein"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 32,
+      "carbs_g": 70,
+      "fat_g": 10
+    },
+    "ingredients": [
+      {
+        "name": "Quorn Mince",
+        "quantity_per_serving": 120,
+        "unit": "g",
+        "category": "protein",
+        "notes": "frozen"
+      },
+      {
+        "name": "Kidney Beans",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Chopped Tomatoes",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "tinned"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Chilli Powder",
+        "quantity_per_serving": 3,
+        "unit": "g",
+        "category": "spice",
+        "notes": "to taste"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      }
+    ]
+  },
+  {
+    "name": "Egg Fried Rice with Prawns",
+    "description": "Quick egg fried rice with prawns and peas.",
+    "prep_time_mins": 10,
+    "cook_time_mins": 10,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.9,
+    "tags": ["prawn", "rice", "high-protein", "quick"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 32,
+      "carbs_g": 70,
+      "fat_g": 12
+    },
+    "ingredients": [
+      {
+        "name": "Cooked Rice",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "carb",
+        "notes": "cold"
+      },
+      {
+        "name": "Raw King Prawns",
+        "quantity_per_serving": 110,
+        "unit": "g",
+        "category": "protein",
+        "notes": "peeled"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "scrambled in pan"
+      },
+      {
+        "name": "Frozen Peas",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "added to pan"
+      },
+      {
+        "name": "Soy Sauce",
+        "quantity_per_serving": 10,
+        "unit": "ml",
+        "category": "condiment",
+        "notes": "to taste"
+      }
+    ]
+  },
+  {
+    "name": "Sheet Pan Chicken Fajitas",
+    "description": "Oven-baked chicken fajita mix served with tortillas and toppings.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "fajitas", "high-protein", "traybake"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 42,
+      "carbs_g": 70,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 160,
+        "unit": "g",
+        "category": "protein",
+        "notes": "sliced"
+      },
+      {
+        "name": "Mixed Peppers",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Fajita Seasoning",
+        "quantity_per_serving": 4,
+        "unit": "g",
+        "category": "spice",
+        "notes": "tossed with chicken and veg"
+      },
+      {
+        "name": "Soft Tortillas",
+        "quantity_per_serving": 2,
+        "unit": "medium",
+        "category": "carb",
+        "notes": "to serve"
+      }
+    ]
+  },
+  {
+    "name": "Chicken and Bacon Carbonara-Style Pasta",
+    "description": "Lightened carbonara-style pasta with chicken and bacon.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "bacon", "pasta", "high-protein"],
+    "macros_per_serving": {
+      "calories": 680,
+      "protein_g": 45,
+      "carbs_g": 75,
+      "fat_g": 20
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "diced"
+      },
+      {
+        "name": "Bacon Medallions",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "protein",
+        "notes": "chopped"
+      },
+      {
+        "name": "Pasta",
+        "quantity_per_serving": 80,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "mixed into sauce"
+      },
+      {
+        "name": "Parmesan",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "Spicy Beef Ramen",
+    "description": "Brothy ramen with sliced beef, noodles and vegetables.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.5,
+    "tags": ["beef", "ramen", "high-protein"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 40,
+      "carbs_g": 70,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Beef Stir-Fry Strips",
+        "quantity_per_serving": 140,
+        "unit": "g",
+        "category": "protein",
+        "notes": "quick-cooking"
+      },
+      {
+        "name": "Ramen Noodles",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Beef Stock",
+        "quantity_per_serving": 300,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for broth"
+      },
+      {
+        "name": "Pak Choi or Cabbage",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      },
+      {
+        "name": "Carrot",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "matchsticks"
+      },
+      {
+        "name": "Chilli Paste",
+        "quantity_per_serving": 5,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "to taste"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Enchilada Bake",
+    "description": "Layered tortillas with spicy chicken, beans and cheese baked in the oven.",
+    "prep_time_mins": 25,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.2,
+    "tags": ["chicken", "bake", "high-protein", "mexican"],
+    "macros_per_serving": {
+      "calories": 700,
+      "protein_g": 44,
+      "carbs_g": 75,
+      "fat_g": 24
+    },
+    "ingredients": [
+      {
+        "name": "Cooked Shredded Chicken",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "protein",
+        "notes": "mixed with sauce"
+      },
+      {
+        "name": "Black Beans",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "protein",
+        "notes": "tinned, drained"
+      },
+      {
+        "name": "Soft Tortillas",
+        "quantity_per_serving": 2,
+        "unit": "medium",
+        "category": "carb",
+        "notes": "layered in dish"
+      },
+      {
+        "name": "Salsa",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Cheddar",
+        "quantity_per_serving": 20,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated on top"
+      }
+    ]
+  },
+  {
+    "name": "Chicken and Broccoli Bake",
+    "description": "Baked chicken and broccoli in a light cheesy sauce with a crunchy top.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.8,
+    "tags": ["chicken", "bake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 42,
+      "carbs_g": 30,
+      "fat_g": 26
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "diced"
+      },
+      {
+        "name": "Broccoli",
+        "quantity_per_serving": 90,
+        "unit": "g",
+        "category": "veg",
+        "notes": "florets"
+      },
+      {
+        "name": "Light Cream Cheese",
+        "quantity_per_serving": 25,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Milk",
+        "quantity_per_serving": 60,
+        "unit": "ml",
+        "category": "dairy",
+        "notes": "for sauce"
+      },
+      {
+        "name": "Breadcrumbs",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "carb",
+        "notes": "for topping"
+      },
+      {
+        "name": "Cheddar",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "dairy",
+        "notes": "grated"
+      }
+    ]
+  },
+  {
+    "name": "Miso Glazed Cod with Greens",
+    "description": "Oven-baked miso cod with rice and steamed greens.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.8,
+    "tags": ["fish", "miso", "high-protein"],
+    "macros_per_serving": {
+      "calories": 560,
+      "protein_g": 38,
+      "carbs_g": 60,
+      "fat_g": 14
+    },
+    "ingredients": [
+      {
+        "name": "Cod Fillet",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "marinated in miso"
+      },
+      {
+        "name": "Miso Paste",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "whisked with soy and honey"
+      },
+      {
+        "name": "Rice",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Tenderstem Broccoli",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "veg",
+        "notes": "steamed"
+      },
+      {
+        "name": "Pak Choi",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "steamed"
+      }
+    ]
+  },
+  {
+    "name": "Turkey and Sweet Potato Hash",
+    "description": "Pan-fried turkey mince with sweet potato cubes, peppers and egg.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 20,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 2.7,
+    "tags": ["turkey", "hash", "high-protein"],
+    "macros_per_serving": {
+      "calories": 580,
+      "protein_g": 40,
+      "carbs_g": 50,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Turkey Mince 5% Fat",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "protein",
+        "notes": "browned"
+      },
+      {
+        "name": "Sweet Potato",
+        "quantity_per_serving": 150,
+        "unit": "g",
+        "category": "carb",
+        "notes": "small cubes"
+      },
+      {
+        "name": "Red Pepper",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Onion",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "diced"
+      },
+      {
+        "name": "Egg",
+        "quantity_per_serving": 1,
+        "unit": "whole",
+        "category": "protein",
+        "notes": "fried on top"
+      }
+    ]
+  },
+  {
+    "name": "Mediterranean Baked Chicken and Orzo",
+    "description": "Traybake of chicken, orzo, tomatoes and olives baked together.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 30,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "orzo", "bake", "high-protein"],
+    "macros_per_serving": {
+      "calories": 640,
+      "protein_g": 44,
+      "carbs_g": 70,
+      "fat_g": 18
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Thighs",
+        "quantity_per_serving": 170,
+        "unit": "g",
+        "category": "protein",
+        "notes": "bone in or out"
+      },
+      {
+        "name": "Orzo Pasta",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 60,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Black Olives",
+        "quantity_per_serving": 12,
+        "unit": "g",
+        "category": "pantry",
+        "notes": "pitted"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 250,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "for baking"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Pho-Style Noodle Soup",
+    "description": "Light aromatic chicken broth with rice noodles and herbs.",
+    "prep_time_mins": 20,
+    "cook_time_mins": 25,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.0,
+    "tags": ["chicken", "soup", "noodles", "high-protein"],
+    "macros_per_serving": {
+      "calories": 540,
+      "protein_g": 38,
+      "carbs_g": 60,
+      "fat_g": 12
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 140,
+        "unit": "g",
+        "category": "protein",
+        "notes": "poached and sliced"
+      },
+      {
+        "name": "Rice Noodles",
+        "quantity_per_serving": 70,
+        "unit": "g",
+        "category": "carb",
+        "notes": "dry weight"
+      },
+      {
+        "name": "Chicken Stock",
+        "quantity_per_serving": 350,
+        "unit": "ml",
+        "category": "pantry",
+        "notes": "aromatised with spices"
+      },
+      {
+        "name": "Bean Sprouts",
+        "quantity_per_serving": 40,
+        "unit": "g",
+        "category": "veg",
+        "notes": "for serving"
+      },
+      {
+        "name": "Spring Onions",
+        "quantity_per_serving": 10,
+        "unit": "g",
+        "category": "veg",
+        "notes": "sliced"
+      }
+    ]
+  },
+  {
+    "name": "Chicken Pesto Gnocchi Skillet",
+    "description": "One-pan gnocchi with pesto chicken and cherry tomatoes.",
+    "prep_time_mins": 15,
+    "cook_time_mins": 15,
+    "base_servings": 2,
+    "min_servings": 2,
+    "max_servings": 6,
+    "estimated_cost_per_serving_gbp": 3.1,
+    "tags": ["chicken", "gnocchi", "high-protein", "one-pot"],
+    "macros_per_serving": {
+      "calories": 700,
+      "protein_g": 42,
+      "carbs_g": 80,
+      "fat_g": 22
+    },
+    "ingredients": [
+      {
+        "name": "Chicken Breast",
+        "quantity_per_serving": 140,
+        "unit": "g",
+        "category": "protein",
+        "notes": "diced"
+      },
+      {
+        "name": "Gnocchi",
+        "quantity_per_serving": 130,
+        "unit": "g",
+        "category": "carb",
+        "notes": "chilled or shelf-stable"
+      },
+      {
+        "name": "Green Pesto",
+        "quantity_per_serving": 16,
+        "unit": "g",
+        "category": "condiment",
+        "notes": "stirred through"
+      },
+      {
+        "name": "Cherry Tomatoes",
+        "quantity_per_serving": 50,
+        "unit": "g",
+        "category": "veg",
+        "notes": "halved"
+      },
+      {
+        "name": "Spinach",
+        "quantity_per_serving": 30,
+        "unit": "g",
+        "category": "veg",
+        "notes": "stirred in at end"
+      }
+    ]
   }
 ];
 
