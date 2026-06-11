@@ -1,7 +1,7 @@
 {
   "name": "mealplanner",
   "version": "1.0.0",
-  "description": "Cloudflare Workers REST API for Couples Meal Planner backed by D1",
+  "description": "Cloudflare Workers REST API for Household Meal Planner backed by D1",
   "main": "src/index.js",
   "scripts": {
     "dev": "wrangler dev",
