@@ -1747,15 +1747,9 @@ function showRecipeModal(recipe) {
       </div>
     </div>
 
-    <div class="instructions-list">
+    <div class="instructions-list" style="margin-bottom: 20px;">
       <h4 style="color: var(--color-primary); margin-bottom: 15px;">📖 Instructions</h4>
       <ol>${instructionsHtml}</ol>
-    </div>
-
-    <div style="background: var(--color-primary-light); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-      <p style="margin: 0; font-size: 13px; color: var(--color-text);">
-        <strong>💡 ${recipe.tips}</strong>
-      </p>
     </div>
 
     <div class="buttons">

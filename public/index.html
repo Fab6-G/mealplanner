@@ -298,14 +298,9 @@
         <div id="recipes" class="tab-content">
             <div class="card">
                 <h2>Recipe Ideas</h2>
-                <p style="color: var(--color-text-light); margin-bottom: 20px;">
-                    Auto-generated recipes matching your macros • Ingredients available at Tesco • Rotated weekly
-                </p>
 
                 <div class="buttons" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; width: 100%;">
-                    <button class="btn-primary" onclick="alert('Generating new recipes using your macros...')">🔄 Generate New Recipes</button>
                     <button id="favouritesFilterBtn" class="btn-secondary" onclick="toggleFavouritesFilter()">⭐ Show Favourites</button>
-                    <button class="btn-secondary">🔗 Share Recipe</button>
                     <div class="dropdown" style="position: relative; display: inline-block; margin-left: auto;">
                         <button id="recipeImportExportBtn" class="btn-secondary" onclick="toggleRecipeImportExportDropdown(event)" style="display: flex; align-items: center; gap: 6px;">
                             ↕️ Import / Export
