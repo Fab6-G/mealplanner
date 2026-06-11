@@ -76,50 +76,71 @@ function getCorsHeaders(request) {
 // Seed helper functions
 async function seedRecipesIfEmpty(db) {
   try {
-    const count = await db.prepare("SELECT COUNT(*) as cnt FROM recipes").first("cnt");
+    const count = await db.prepare("SELECT COUNT(*) as cnt FROM recipes WHERE is_custom = 0").first("cnt");
     if (count === 0) {
       console.log("Seeding recipes...");
+      
+      // Clear out any existing built-in recipes to avoid duplication
+      await db.prepare("DELETE FROM recipes WHERE is_custom = 0").run();
+      
       const statements = [];
       for (const r of defaultRecipes) {
+        // Compute base macros
+        const baseServings = Number(r.base_servings || r.servings || 4);
+        const baseMacros = {
+          calories: Math.round((Number(r.macros_per_serving?.calories) || 0) * baseServings),
+          protein_g: Math.round((Number(r.macros_per_serving?.protein_g) || 0) * baseServings * 10) / 10,
+          carbs_g: Math.round((Number(r.macros_per_serving?.carbs_g) || 0) * baseServings * 10) / 10,
+          fat_g: Math.round((Number(r.macros_per_serving?.fat_g) || 0) * baseServings * 10) / 10
+        };
+
+        const prepTime = typeof r.prep_time_mins === "number" ? `${r.prep_time_mins} min` : (r.prep_time || "0 min");
+        const cookTime = typeof r.cook_time_mins === "number" ? `${r.cook_time_mins} min` : (r.cook_time || "0 min");
+        const minServings = r.min_servings !== undefined && r.min_servings !== null ? Number(r.min_servings) : null;
+        const maxServings = r.max_servings !== undefined && r.max_servings !== null ? Number(r.max_servings) : null;
+        const estimatedCost = r.estimated_cost_per_serving_gbp !== undefined && r.estimated_cost_per_serving_gbp !== null ? Number(r.estimated_cost_per_serving_gbp) : null;
+        const tags = Array.isArray(r.tags) ? JSON.stringify(r.tags) : "[]";
+
         statements.push(
           db.prepare(
-            "INSERT INTO recipes (id, name, emoji, description, prep_time, cook_time, servings, ingredients, instructions, tips, macros, min_servings, max_servings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            `INSERT INTO recipes (
+              id, name, emoji, description, prep_time, cook_time, servings, 
+              ingredients, instructions, tips, macros, min_servings, max_servings, 
+              is_custom, created_by_user_id, estimated_cost_per_serving_gbp, tags
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?)`
           ).bind(
             r.id,
             r.name,
-            r.emoji,
-            r.description,
-            r.prep_time,
-            r.cook_time,
-            r.servings,
-            JSON.stringify(r.ingredients),
-            JSON.stringify(r.instructions),
-            r.tips,
-            JSON.stringify(r.macros),
-            r.min_servings !== undefined ? r.min_servings : null,
-            r.max_servings !== undefined ? r.max_servings : null
+            r.emoji || "🍳",
+            r.description || "",
+            prepTime,
+            cookTime,
+            baseServings,
+            JSON.stringify(r.ingredients || []),
+            JSON.stringify(r.instructions || []),
+            r.tips || "",
+            JSON.stringify(baseMacros),
+            minServings,
+            maxServings,
+            estimatedCost,
+            tags
           )
         );
 
-        if (r.ingredients) {
-          for (const [category, items] of Object.entries(r.ingredients)) {
-            if (Array.isArray(items)) {
-              for (const ing of items) {
-                const qtyPerServing = Number(ing.quantity) / Number(r.servings);
-                statements.push(
-                  db.prepare(
-                    "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
-                  ).bind(
-                    r.id,
-                    ing.name,
-                    qtyPerServing,
-                    ing.unit,
-                    null,
-                    category
-                  )
-                );
-              }
-            }
+        if (Array.isArray(r.ingredients)) {
+          for (const ing of r.ingredients) {
+            statements.push(
+              db.prepare(
+                "INSERT INTO recipe_ingredients (recipe_id, name, quantity_per_serving, unit, notes, category) VALUES (?, ?, ?, ?, ?, ?)"
+              ).bind(
+                r.id,
+                ing.name,
+                Number(ing.quantity_per_serving),
+                ing.unit,
+                ing.notes || null,
+                ing.category
+              )
+            );
           }
         }
       }

@@ -4,7 +4,10 @@
   "description": "",
   "main": "js/data.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:reset:local": "npx --prefix worker wrangler d1 execute mealplanner-db --local --command=\"DELETE FROM recipes WHERE is_custom = 0;\"",
+    "db:reset:remote": "npx --prefix worker wrangler d1 execute mealplanner-db --remote --command=\"DELETE FROM recipes WHERE is_custom = 0;\"",
+    "deploy": "npm --prefix worker run deploy"
   },
   "private": true
 }
