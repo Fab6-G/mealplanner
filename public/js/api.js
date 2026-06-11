@@ -327,7 +327,7 @@ const API = {
 
     card.innerHTML = `
       <div style="font-size: 40px; margin-bottom: 10px;">🥗</div>
-      <h2 id="authTitle" style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Couples Meal Planner</h2>
+      <h2 id="authTitle" style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Household Meal Planner</h2>
       <p id="authSubtitle" style="margin: 0 0 30px 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Sign in to sync your recipes and grocery list</p>
       
       <div id="authError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 13px;"></div>
@@ -376,7 +376,7 @@ const API = {
       isLogin = !isLogin;
       errorEl.style.display = "none";
       if (isLogin) {
-        title.textContent = "Couples Meal Planner";
+        title.textContent = "Household Meal Planner";
         subtitle.textContent = "Sign in to sync your recipes and grocery list";
         submitBtn.textContent = "Sign In";
         toggleText.textContent = "Don't have an account?";

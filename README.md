@@ -1,6 +1,6 @@
-# Couples Meal Planner
+# Household Meal Planner
 
-This repository contains the couples meal planner application, which runs on **Cloudflare Workers + D1** (SQLite database) and is styled using a modern responsive glassmorphic UI.
+This repository contains the household meal planner application, which runs on **Cloudflare Workers + D1** (SQLite database) and is styled using a modern responsive glassmorphic UI.
 
 ## Recipe Filtering & Curation
 
